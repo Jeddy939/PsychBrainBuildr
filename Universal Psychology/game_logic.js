@@ -102,6 +102,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const neurofuelCountDOM = document.getElementById('neurofuel-count');
     const neurofuelCostDOM = document.getElementById('neurofuel-cost');
     const buyNeurofuelBtnDOM = document.getElementById('buy-neurofuel-btn');
+    const infoButtonDOM = document.getElementById('info-button');
+    const instructionsOverlayDOM = document.getElementById('instructions-overlay');
+    const closeInstructionsBtnDOM = document.getElementById('close-instructions');
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
@@ -329,6 +332,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
         if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyFactory);
         if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
+        if (infoButtonDOM) infoButtonDOM.addEventListener('click', () => {
+            if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'flex';
+        });
+        if (closeInstructionsBtnDOM) closeInstructionsBtnDOM.addEventListener('click', () => {
+            if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'none';
+        });
         const btnDebugNeurons = document.getElementById('debug-add-neurons');
         const btnDebugPsychbucks = document.getElementById('debug-add-psychbucks');
         if (btnDebugNeurons) btnDebugNeurons.addEventListener('click', () => { gameState.neurons += 1000; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +1000 Neurons", "log-info"); }); else console.warn("Debug neurons button not found.");
