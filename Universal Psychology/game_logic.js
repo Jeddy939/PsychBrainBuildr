@@ -3,8 +3,17 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. GAME STATE OBJECT ---
     const gameState = {
-        neurons: 0, psychbucks: 0, neuronsPerClick: 1, currentBrainLevel: 0, passiveNeuronsPerSecond: 0,
-        totalNeuronsGenerated: 0, neuronsSpentOnBrainUpgrades: 0, dopamineLevel: 0, gabaLevel: 0,
+        neurons: 0,
+        psychbucks: 0,
+        neuronsPerClick: 1,
+        currentBrainLevel: 0,
+        passiveNeuronsPerSecond: 0,
+        totalNeuronsGenerated: 0,
+        neuronsSpentOnBrainUpgrades: 0,
+        dopamineLevel: 0,
+        gabaLevel: 0,
+        factoryCount: 0,
+        factoryCost: 10,
         // anxietyMeter, timeAtHighDopamine, isAnxietyAttackActive are now in AnxietySystem
         questionsActuallyUnlocked: false,
         // isAmygdalaActive is effectively AnxietySystem.isAmygdalaFunctioning()
@@ -12,7 +21,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 2. CONSTANTS ---
     const ANXIETY_THRESHOLD = 70; const ANXIETY_SUSTAINED_THRESHOLD = 60; const ANXIETY_TIME_LIMIT = 20; const MAX_ANXIETY = 100;
-    const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20;
+    const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20; const FACTORY_PRODUCTION_RATE = 0.5;
 
     // --- 3. DOM ELEMENTS ---
     const neuronsDisplayDOM = document.getElementById('neurons-display');
@@ -35,10 +44,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const anxietyStatusDisplayDOM = document.getElementById('anxiety-status');
     const infoBannerDOM = document.getElementById('info-banner');
     const scaryStimuliOverlayDOM = document.getElementById('scary-stimuli-overlay');
+    const factoryAreaDOM = document.getElementById('factory-area');
+    const factoryCountDOM = document.getElementById('factory-count');
+    const factoryCostDOM = document.getElementById('factory-cost');
+    const buyFactoryBtnDOM = document.getElementById('buy-factory-btn');
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
-        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
+        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } if (factoryAreaDOM) { factoryAreaDOM.style.display = 'block'; UIManager.updateFactoryDisplay(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
         { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
         { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
         { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
@@ -60,9 +73,15 @@ document.addEventListener('DOMContentLoaded', async () => {
         displayQuestion(qData) { if(questionTextElementDOM)questionTextElementDOM.textContent=qData.text; if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML=""; qData.options.forEach((opt,idx)=>{const btn=document.createElement('button');btn.textContent=opt;btn.onclick=()=>QuestionSystem.handleAnswer(idx);if(answerOptionsElementDOM)answerOptionsElementDOM.appendChild(btn);});},
         displayFeedback(msg,type){if(type==='correct'||type==='incorrect'){if(feedbackAreaDOM){feedbackAreaDOM.textContent=msg;feedbackAreaDOM.style.color=type==='correct'?'green':'red';}}else if(type==='streak-bonus'||type==='streak-broken'){if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent=msg;streakFeedbackAreaDOM.className=type==='streak-bonus'?'streak-bonus-text':'streak-broken-text';}}},
         clearFeedbackAreas() { if(feedbackAreaDOM)feedbackAreaDOM.textContent=''; if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent='';streakFeedbackAreaDOM.className='';}},
-        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateAnxietyDisplay();UpgradeSystem.updateUpgradeButtons();},
+        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();UpgradeSystem.updateUpgradeButtons();},
         callUpdateBrainVisual() { if(window.GameVisuals && typeof window.GameVisuals.updateBrainVisual === 'function'){window.GameVisuals.updateBrainVisual({level:gameState.currentBrainLevel,dopamine:gameState.dopamineLevel,gaba:gameState.gabaLevel});}},
         renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${upg.name} ${sTxt}</h3><p>${upg.description}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${upg.name}</h3><p>${upg.description}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
+        updateFactoryDisplay(){
+            if(!factoryAreaDOM) return;
+            if(factoryCountDOM) factoryCountDOM.textContent = gameState.factoryCount;
+            if(factoryCostDOM) factoryCostDOM.textContent = Math.ceil(gameState.factoryCost);
+            if(buyFactoryBtnDOM) buyFactoryBtnDOM.disabled = gameState.psychbucks < gameState.factoryCost;
+        },
         updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;}
     };
 
@@ -161,6 +180,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`[DEBUG] Neurons: ${neuronsBeforeClick} -> ${gameState.neurons}, PerClick: ${gameState.neuronsPerClick}`); UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
         UIManager.updateAllDisplays();
     }
+    function handleBuyFactory(){
+        if(gameState.psychbucks >= gameState.factoryCost){
+            gameState.psychbucks -= gameState.factoryCost;
+            gameState.factoryCount += 1;
+            gameState.passiveNeuronsPerSecond += FACTORY_PRODUCTION_RATE;
+            gameState.factoryCost *= 1.15;
+            UIManager.logMessage(`Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
+        } else {
+            UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
+        }
+        UIManager.updateAllDisplays();
+    }
     function handleDopamineSlider(event) { gameState.dopamineLevel = parseInt(event.target.value); if(dopamineLevelDisplayDOM) dopamineLevelDisplayDOM.textContent = gameState.dopamineLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
     function handleGabaSlider(event) { gameState.gabaLevel = parseInt(event.target.value); if(gabaLevelDisplayDOM) gabaLevelDisplayDOM.textContent = gameState.gabaLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
 
@@ -191,6 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else { console.error("clickButtonDOM is null."); UIManager.logMessage("ERR: Click button not found!", "log-warning"); }
         if (dopamineSliderDOM) dopamineSliderDOM.addEventListener('input', handleDopamineSlider); else console.warn("Dopamine slider not found.");
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
+        if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyFactory);
         const btnDebugNeurons = document.getElementById('debug-add-neurons');
         const btnDebugPsychbucks = document.getElementById('debug-add-psychbucks');
         if (btnDebugNeurons) btnDebugNeurons.addEventListener('click', () => { gameState.neurons += 1000; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +1000 Neurons", "log-info"); }); else console.warn("Debug neurons button not found.");
@@ -221,6 +253,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UpgradeSystem.renderCoreUpgrades();
         UpgradeSystem.renderNeuronProliferationUpgrades();
         attachEventListeners();
+        UIManager.updateFactoryDisplay();
         UIManager.updateAllDisplays();
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
         setInterval(gameLoop, 1000);
