@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         gabaLevel: 0,
         factoryCount: 0,
         factoryCost: 10,
+        passiveNeuroFuelMultiplier: 1,
         neuroFuel: 10,
         neuroFuelCost: 1,
         mindOps: 0,
@@ -114,9 +115,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
     ];
     const neuronProliferationUpgrades_raw_data = [
-        { id: "prolif1", name: "Basic Axon Growth", description: "+1 Neuron/sec.", costCurrency: "psychbucks", cost: 10, neuronBoost: 1.0, effectApplied: false, type: 'proliferation', action: () => {} },
-        { id: "prolif2", name: "Dendritic Sprouting", description: "+0.5 Neurons/sec.", costCurrency: "psychbucks", cost: 25, neuronBoost: 0.5, effectApplied: false, dependsOn: "prolif1", type: 'proliferation', action: () => {} },
-        { id: "prolif3", name: "Myelination I", description: "+0.7 Neurons/sec.", costCurrency: "psychbucks", cost: 60, neuronBoost: 0.7, effectApplied: false, dependsOn: "prolif2", type: 'proliferation', action: () => {} },
+        { id: "prolifFactory", name: "Neuron Proliferation Factory", description: "Builds a facility for passive neuron growth (+0.5/sec).", costCurrency: "psychbucks", cost: 10, neuronBoost: 0.5, effectApplied: false, type: 'proliferation' },
+        { id: "dendriticSprouting", name: "Dendritic Sprouting", description: "Increase passive neuron production by 0.1%.", costCurrency: "psychbucks", cost: 25, percentBoost: 0.1, effectApplied: false, dependsOn: "prolifFactory", type: 'proliferation' },
+        { id: "myelination", name: "Myelination", description: "Boost production but consumes more fuel and raises anxiety.", costCurrency: "psychbucks", cost: 60, percentBoost: 20, extraFuel: 0.2, anxietyBoost: 5, effectApplied: false, dependsOn: "dendriticSprouting", type: 'proliferation' },
     ];
 
     const projectData = [
@@ -204,7 +205,21 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (canAfford) {
                 if(upg.costCurrency==="neurons")gameState.neurons-=upg.cost; if(upg.costCurrency==="psychbucks")gameState.psychbucks-=upg.cost; if(upg.psychbuckCost)gameState.psychbucks-=upg.psychbuckCost;
                 if(upg.type==='brain')gameState.neuronsSpentOnBrainUpgrades+=upg.cost; upg.effectApplied=true;
-                if(upgradeType==="proliferation"&&typeof upg.neuronBoost==='number'){gameState.passiveNeuronsPerSecond+=upg.neuronBoost;gameState.passiveNeuronsPerSecond=parseFloat(gameState.passiveNeuronsPerSecond.toFixed(2));}
+                if(upgradeType==="proliferation"){ 
+                    if(typeof upg.neuronBoost==='number'){ 
+                        gameState.passiveNeuronsPerSecond+=upg.neuronBoost; 
+                    }
+                    if(typeof upg.percentBoost==='number'){ 
+                        gameState.passiveNeuronsPerSecond*=1+(upg.percentBoost/100); 
+                    }
+                    if(typeof upg.extraFuel==='number'){ 
+                        gameState.passiveNeuroFuelMultiplier*=1+upg.extraFuel; 
+                    }
+                    if(typeof upg.anxietyBoost==='number'){ 
+                        AnxietySystem.increaseMeter(upg.anxietyBoost); 
+                    }
+                    gameState.passiveNeuronsPerSecond=parseFloat(gameState.passiveNeuronsPerSecond.toFixed(2));
+                }
                 const origUpgData=(upgradeType==="core"?coreUpgrades_raw_data:neuronProliferationUpgrades_raw_data).find(u=>u.id===upgradeId);
                 if(origUpgData&&typeof origUpgData.action==='function'){origUpgData.action();}
                 UIManager.logMessage(`Upgrade: ${upg.name} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
@@ -248,13 +263,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log(`[DEBUG] Neurons: ${neuronsBeforeClick} -> ${gameState.neurons}, PerClick: ${possible}`); UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
         UIManager.updateAllDisplays();
     }
-    function handleBuyFactory(){
+    function handleBuyProliferationFactory(){
         if(gameState.psychbucks >= gameState.factoryCost){
             gameState.psychbucks -= gameState.factoryCost;
             gameState.factoryCount += 1;
             gameState.passiveNeuronsPerSecond += FACTORY_PRODUCTION_RATE;
             gameState.factoryCost *= 1.15;
-            UIManager.logMessage(`Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
+            UIManager.logMessage(`Proliferation Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
         } else {
             UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
         }
@@ -317,11 +332,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             calculatedPassiveRateThisTick = Math.max(0, calculatedPassiveRateThisTick);
         }
         if(gameState.neuroFuel > 0){
-            const possible = Math.min(calculatedPassiveRateThisTick, gameState.neuroFuel);
+            const maxPossible = gameState.neuroFuel / gameState.passiveNeuroFuelMultiplier;
+            const possible = Math.min(calculatedPassiveRateThisTick, maxPossible);
             gameState.neurons += possible;
             gameState.totalNeuronsGenerated += possible;
             gameState.mindOps += possible * OPS_PER_NEURON;
-            gameState.neuroFuel -= possible;
+            gameState.neuroFuel -= possible * gameState.passiveNeuroFuelMultiplier;
         }
         UIManager.updateAllDisplays();
     }
@@ -335,7 +351,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         else { console.error("clickButtonDOM is null."); UIManager.logMessage("ERR: Click button not found!", "log-warning"); }
         if (dopamineSliderDOM) dopamineSliderDOM.addEventListener('input', handleDopamineSlider); else console.warn("Dopamine slider not found.");
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
-        if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyFactory);
+        if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyProliferationFactory);
         if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
         if (infoButtonDOM) infoButtonDOM.addEventListener('click', () => {
             if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'flex';
