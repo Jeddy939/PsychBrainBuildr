@@ -1,0 +1,65 @@
+[
+    {
+        "id": "q1",
+        "text": "Which defense mechanism involves attributing one's own unacceptable thoughts to others?",
+        "options": ["Denial", "Projection", "Sublimation", "Rationalization"],
+        "correctAnswerIndex": 1,
+        "difficulty": 0
+    },
+    {
+        "id": "q2",
+        "text": "Who is considered the founder of psychoanalysis?",
+        "options": ["Carl Jung", "B.F. Skinner", "Sigmund Freud", "Jean Piaget"],
+        "correctAnswerIndex": 2,
+        "difficulty": 0
+    },
+    {
+        "id": "q3",
+        "text": "What does 'Gestalt' roughly translate to in psychology?",
+        "options": ["Behavior", "Cognition", "Whole/Form", "Emotion"],
+        "correctAnswerIndex": 2,
+        "difficulty": 0
+    },
+    {
+        "id": "q4",
+        "text": "The Milgram experiment primarily studied:",
+        "options": ["Obedience to authority", "Classical conditioning", "Memory formation", "Groupthink"],
+        "correctAnswerIndex": 0,
+        "difficulty": 1
+    },
+    {
+        "id": "q5",
+        "text": "What is the 'placebo effect'?",
+        "options": ["A drug with no therapeutic effect", "A negative side effect", "Improvement from belief in treatment", "A type of cognitive bias"],
+        "correctAnswerIndex": 2,
+        "difficulty": 1
+    },
+    {
+        "id": "q6",
+        "text": "Which of these is NOT one of the Big Five personality traits?",
+        "options": ["Openness", "Conscientiousness", "Introversion", "Neuroticism"],
+        "correctAnswerIndex": 2,
+        "difficulty": 1
+    },
+    {
+        "id": "q7",
+        "text": "What is the primary function of the hippocampus?",
+        "options": ["Regulating emotions", "Processing sensory input", "Forming new memories", "Controlling motor skills"],
+        "correctAnswerIndex": 2,
+        "difficulty": 2
+    },
+    {
+        "id": "q8",
+        "text": "A 'Type I error' in statistical hypothesis testing is also known as a:",
+        "options": ["False positive", "False negative", "Correct rejection", "Correct acceptance"],
+        "correctAnswerIndex": 0,
+        "difficulty": 2
+    },
+    {
+        "id": "q9",
+        "text": "The Broca's area in the brain is primarily associated with:",
+        "options": ["Language comprehension", "Visual processing", "Speech production", "Emotional regulation"],
+        "correctAnswerIndex": 2,
+        "difficulty": 2
+    }
+]

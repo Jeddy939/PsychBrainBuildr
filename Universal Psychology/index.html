@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Universal Psychology</title>
+    <link rel="stylesheet" href="style.css">
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div class="game-container">
+        <div id="info-banner">
+            <p class="log-info">Welcome to Universal Psychology! Click 'Add Neurons' or answer questions to begin developing your consciousness.</p>
+        </div>
+
+       <!-- New Main Page Header -->
+        <header id="page-header">
+            <!-- REMOVED: <h1>Universal Psychology</h1> -->
+            <div class="header-stats-container">
+                <div class="neuron-control">
+                    <button id="click-button">Add Neurons</button>
+                    <div id="neurons-display">Neurons: 0</div>
+                </div>
+                <div id="psychbucks-display">Psychbucks: 0 | Passive: 0.0/s</div>
+                <div id="iq-display">IQ: 80</div>
+            </div>
+        </header>
+
+        <!-- Main Content Area with Two Columns -->
+        <div class="content-wrapper">
+            <aside class="left-column">
+                <section id="question-area">
+                    <h2>Test Your Knowledge</h2>
+                    <div id="question-text">Upgrade your brain to unlock psychology questions!</div>
+                    <div id="answer-options"></div>
+                    <div id="feedback-area"></div>
+                     <div id="question-text">Upgrade your brain to unlock psychology questions!</div>
+                    <div id="answer-options"></div>
+                    <div id="feedback-area"></div>
+                </section>
+
+                <section id="debug-controls"> <!-- Removed inline styles, will be handled by CSS -->
+                    <h2>Debug Tools</h2>
+                    <button id="debug-add-neurons">+1000 Neurons</button>
+                    <button id="debug-add-psychbucks">+100 Psychbucks</button>
+                    <p>(For testing purposes only. Remove or hide before release!)</p>
+                </section>
+            </aside>
+
+            <main class="right-column">
+                <section id="brain-visual-area">
+                    <div class="brain-viz-wrapper">
+                        <h2>Your Brain</h2>
+                        <div id="threejs-canvas-container"></div>
+                    </div>
+                </section>
+
+                
+                
+                <!-- Container for scrollable content below brain viz -->
+                <div class="right-column-lower-content">
+                    <section id="upgrades-area">
+                        <h2>Core Upgrades</h2>
+                        <div id="upgrades-list"></div>
+                    </section>
+
+                    <section id="neuron-proliferation-area" style="display: none;">
+                        <h2>Neuron Proliferation</h2>
+                        <div id="neuron-proliferation-upgrades-list"></div>
+                    </section>
+
+                    <section id="hypothalamus-controls-area" style="display: none;">
+                        <h2>Hypothalamus Controls</h2>
+                        <div id="dopamine-control">
+                            <label for="dopamine-slider">Dopamine:</label>
+                            <input type="range" id="dopamine-slider" min="0" max="100" value="0">
+                            <span id="dopamine-level-display">0</span>
+                        </div>
+                        <div id="gaba-control">
+                            <label for="gaba-slider">GABA:</label>
+                            <input type="range" id="gaba-slider" min="0" max="100" value="0">
+                            <span id="gaba-level-display">0</span>
+                        </div>
+                        <div id="anxiety-status">Anxiety Level: Normal</div>
+                    </section>
+                </div>
+            </main>
+        </div>
+    </div>
+
+  <!-- NEW: Overlay for Scary Stimuli -->
+        <div id="scary-stimuli-overlay"></div>
+    </div>
+
+    <script type="module" src="three_scene.js"></script>
+    <script type="module" src="game_logic.js"></script>
+</body>
+</html>
+
+    <script type="module" src="three_scene.js"></script>
+    <script type="module" src="game_logic.js"></script>
+</body>
+</html>

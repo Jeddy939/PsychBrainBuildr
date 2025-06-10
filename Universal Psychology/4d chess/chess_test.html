@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4D Chess Test</title>
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #111; }
+        #chess-canvas-container { width: 100vw; height: 100vh; display: block; }
+    </style>
+    <!-- Three.js Import Map -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.128.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.128.0/examples/jsm/"
+        }
+    }
+    </script>
+</head>
+<body>
+    <div id="chess-canvas-container"></div>
+
+    <script type="module">
+        import { standaloneInitFourDChess } from './fourD_chess.js';
+
+        document.addEventListener('DOMContentLoaded', () => {
+            standaloneInitFourDChess('chess-canvas-container');
+        });
+    </script>
+</body>
+</html>
