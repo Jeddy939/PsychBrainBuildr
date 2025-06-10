@@ -81,13 +81,14 @@ body {
     font-size: 0.9em;
     background-color: #28a745;
 }
-#neurons-display, #psychbucks-display, #iq-display {
+#neurons-display, #psychbucks-display, #iq-display, #ops-display {
     font-size: 1.1em;
     font-weight: bold;
 }
 #neurons-display { color: #28a745; }
 #psychbucks-display { color: #ffc107; }
 #iq-display { color: #007bff; }
+#ops-display { color: #6f42c1; }
 
 
 /* Main Content Wrapper (for two columns) */
@@ -260,6 +261,30 @@ section h2 {
     opacity: 0.7;
 }
 
+.project-item {
+    padding: 10px;
+    border: 1px solid #ccd;
+    margin-bottom: 8px;
+    border-radius: 4px;
+    background-color: #eef;
+}
+.project-item h3 {
+    margin-top: 0;
+    margin-bottom: 5px;
+    font-size: 1.1em;
+}
+.project-item p {
+    margin: 0 0 8px 0;
+}
+.project-item button {
+    font-size: 0.9em;
+    padding: 5px 10px;
+    background-color: #007bff;
+}
+.project-item button:disabled {
+    background-color: #999;
+}
+
 /* Hypothalamus Controls */
 #hypothalamus-controls-area label {
     display: inline-block;
@@ -360,4 +385,8 @@ button:hover {
 .scary-stimulus-popup:hover {
     background-color: rgba(255, 0, 0, 0.95);
     transform: scale(1.05);
+}
+
+#projects-area {
+    display: block;
 }
