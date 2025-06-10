@@ -81,7 +81,7 @@ body {
     font-size: 0.9em;
     background-color: #28a745;
 }
-#neurons-display, #psychbucks-display, #iq-display, #ops-display {
+#neurons-display, #psychbucks-display, #iq-display, #ops-display, #neurofuel-display {
     font-size: 1.1em;
     font-weight: bold;
 }
@@ -89,6 +89,7 @@ body {
 #psychbucks-display { color: #ffc107; }
 #iq-display { color: #007bff; }
 #ops-display { color: #6f42c1; }
+#neurofuel-display { color: #ff7f50; }
 
 
 /* Main Content Wrapper (for two columns) */
