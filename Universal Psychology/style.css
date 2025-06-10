@@ -223,6 +223,7 @@ section h2 {
 }
 #debug-add-neurons { background-color: #5cb85c; }
 #debug-add-psychbucks { background-color: #f0ad4e; }
+#debug-reset-game { background-color: #d9534f; }
 #debug-controls p {
     font-size: 0.8em;
     color: #777;

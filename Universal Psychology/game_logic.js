@@ -295,6 +295,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         } catch(e) { console.error('Load failed', e); }
     }
 
+    function resetGame() {
+        localStorage.removeItem('up_save');
+        location.reload();
+    }
+
     // =======================================================================
     // 10. GAME LOOP
     // =======================================================================
@@ -331,8 +336,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
         const btnDebugNeurons = document.getElementById('debug-add-neurons');
         const btnDebugPsychbucks = document.getElementById('debug-add-psychbucks');
+        const btnDebugReset = document.getElementById('debug-reset-game');
         if (btnDebugNeurons) btnDebugNeurons.addEventListener('click', () => { gameState.neurons += 1000; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +1000 Neurons", "log-info"); }); else console.warn("Debug neurons button not found.");
         if (btnDebugPsychbucks) btnDebugPsychbucks.addEventListener('click', () => { gameState.psychbucks += 100; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +100 Psychbucks", "log-info"); }); else console.warn("Debug psychbucks button not found.");
+        if (btnDebugReset) btnDebugReset.addEventListener('click', resetGame); else console.warn("Debug reset button not found.");
     }
 
     // =======================================================================
