@@ -14,6 +14,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         gabaLevel: 0,
         factoryCount: 0,
         factoryCost: 10,
+        neuroFuel: 10,
+        neuroFuelCost: 1,
         mindOps: 0,
         purchasedProjects: [],
         // anxietyMeter, timeAtHighDopamine, isAnxietyAttackActive are now in AnxietySystem
@@ -61,6 +63,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ANXIETY_THRESHOLD = 70; const ANXIETY_SUSTAINED_THRESHOLD = 60; const ANXIETY_TIME_LIMIT = 20; const MAX_ANXIETY = 100;
     const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20; const FACTORY_PRODUCTION_RATE = 0.5;
     const OPS_PER_NEURON = 0.01; const AUTO_SAVE_INTERVAL = 10000;
+    const NEUROFUEL_PURCHASE_AMOUNT = 10;
+    const FOOD_OPTIONS = [
+        {emoji: '🍌', name: 'Banana'},
+        {emoji: '🥪', name: 'Sandwich'},
+        {emoji: '🍎', name: 'Apple'},
+        {emoji: '🍪', name: 'Cookie'},
+        {emoji: '🍕', name: 'Pizza slice'}
+    ];
 
     // --- 3. DOM ELEMENTS ---
     const neuronsDisplayDOM = document.getElementById('neurons-display');
@@ -89,6 +99,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const factoryCostDOM = document.getElementById('factory-cost');
     const buyFactoryBtnDOM = document.getElementById('buy-factory-btn');
     const projectsListDOM = document.getElementById('projects-list');
+    const neurofuelCountDOM = document.getElementById('neurofuel-count');
+    const neurofuelCostDOM = document.getElementById('neurofuel-cost');
+    const buyNeurofuelBtnDOM = document.getElementById('buy-neurofuel-btn');
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
@@ -115,12 +128,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         updatePsychbuckDisplay(rate) { if (psychbucksDisplayDOM) psychbucksDisplayDOM.textContent = `Psychbucks: ${Math.floor(gameState.psychbucks)} | Passive: ${rate.toFixed(1)}/s`; },
         updateOpsDisplay() { if (opsDisplayDOM) opsDisplayDOM.textContent = `Ops: ${Math.floor(gameState.mindOps)}`; },
         updateIQDisplay() { if (iqDisplayDOM) { const act = gameState.totalNeuronsGenerated + gameState.neuronsSpentOnBrainUpgrades + 1; const iq = BASE_IQ + Math.log10(act) * IQ_SCALE_FACTOR; iqDisplayDOM.textContent = `IQ: ${Math.floor(iq)}`; } },
+        updateNeuroFuelDisplay() { if (neurofuelCountDOM && neurofuelCostDOM) { neurofuelCountDOM.textContent = Math.floor(gameState.neuroFuel); neurofuelCostDOM.textContent = Math.ceil(gameState.neuroFuelCost); } if(buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.disabled = gameState.psychbucks < gameState.neuroFuelCost; if(document.getElementById('neurofuel-display')) document.getElementById('neurofuel-display').textContent = `Fuel: ${Math.floor(gameState.neuroFuel)}`; },
         updateAnxietyDisplay() { if (!anxietyStatusDisplayDOM) return; const ax = AnxietySystem.getAnxietyInfo(); let txt = `Anxiety: Normal (${ax.meter.toFixed(0)}%)`, clr = "green"; if (ax.isAttackActive){txt="Status: ANXIETY ATTACK!";clr="red";} else if (ax.activeStimuliCount>0 && ax.isAmygdalaSystemActive){txt=`Anxiety: Stimuli! (${ax.meter.toFixed(0)}%)`;clr="purple";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD){txt=`Anxiety: CRITICAL (${ax.meter.toFixed(0)}%)`;clr="orange";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD/2){txt=`Anxiety: Elevated (${ax.meter.toFixed(0)}%)`;clr="#CCCC00";} else if (ax.meter>0){txt=`Anxiety: Moderate (${ax.meter.toFixed(0)}%)`;clr="yellowgreen";} anxietyStatusDisplayDOM.textContent=txt; anxietyStatusDisplayDOM.style.color=clr=="g"?"green":clr=="r"?"red":clr=="purple"?"purple":clr=="orange"?"orange":clr=="#CCCC00"?"#CCCC00":clr=="yg"?"yellowgreen":"green";},
         updateQuestionAreaUIVisibility() { if (!questionAreaSectionDOM) {this.logMessage("Q Area DOM missing!","log-warning"); return;} if(gameState.questionsActuallyUnlocked){questionAreaSectionDOM.style.display='';this.logMessage("Q area VISIBLE.","log-info"); if(QuestionSystem.getCurrentQuestionIndex()===-1){this.logMessage("UIManager: Triggering QS loadNextQ.","log-info");QuestionSystem.loadNextQuestion();}}else{questionAreaSectionDOM.style.display='none';if(questionTextElementDOM)questionTextElementDOM.textContent="Upgrade brain for Qs.";if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML='';this.clearFeedbackAreas();this.logMessage("Q area HIDDEN.","log-info");}},
         displayQuestion(qData) { if(questionTextElementDOM)questionTextElementDOM.textContent=qData.text; if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML=""; qData.options.forEach((opt,idx)=>{const btn=document.createElement('button');btn.textContent=opt;btn.onclick=()=>QuestionSystem.handleAnswer(idx);if(answerOptionsElementDOM)answerOptionsElementDOM.appendChild(btn);});},
         displayFeedback(msg,type){if(type==='correct'||type==='incorrect'){if(feedbackAreaDOM){feedbackAreaDOM.textContent=msg;feedbackAreaDOM.style.color=type==='correct'?'green':'red';}}else if(type==='streak-bonus'||type==='streak-broken'){if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent=msg;streakFeedbackAreaDOM.className=type==='streak-bonus'?'streak-bonus-text':'streak-broken-text';}}},
         clearFeedbackAreas() { if(feedbackAreaDOM)feedbackAreaDOM.textContent=''; if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent='';streakFeedbackAreaDOM.className='';}},
-        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();UpgradeSystem.updateUpgradeButtons();ProjectSystem.renderProjects();},
+        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateNeuroFuelDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();UpgradeSystem.updateUpgradeButtons();ProjectSystem.renderProjects();},
         callUpdateBrainVisual() { if(window.GameVisuals && typeof window.GameVisuals.updateBrainVisual === 'function'){window.GameVisuals.updateBrainVisual({level:gameState.currentBrainLevel,dopamine:gameState.dopamineLevel,gaba:gameState.gabaLevel});}},
         renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${upg.name} ${sTxt}</h3><p>${upg.description}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${upg.name}</h3><p>${upg.description}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
         updateFactoryDisplay(){
@@ -223,9 +237,12 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleManualGeneration() {
         console.log("[DEBUG] handleManualGeneration CALLED"); UIManager.logMessage("handleManualGeneration called.", "log-info");
         if (AnxietySystem.isAttackCurrentlyActive()) { console.log("[DEBUG] Manual generation BLOCKED by anxiety attack."); UIManager.logMessage("Brain recovering... clicking disabled (Anxiety Active).", "log-warning"); return; }
-        let neuronsBeforeClick = gameState.neurons; gameState.neurons += gameState.neuronsPerClick; gameState.totalNeuronsGenerated += gameState.neuronsPerClick;
-        gameState.mindOps += gameState.neuronsPerClick * OPS_PER_NEURON;
-        console.log(`[DEBUG] Neurons: ${neuronsBeforeClick} -> ${gameState.neurons}, PerClick: ${gameState.neuronsPerClick}`); UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
+        const possible = Math.min(gameState.neuronsPerClick, gameState.neuroFuel);
+        if(possible <= 0){ UIManager.logMessage('Out of NeuroFuel!', 'log-warning'); return; }
+        let neuronsBeforeClick = gameState.neurons; gameState.neurons += possible; gameState.totalNeuronsGenerated += possible;
+        gameState.mindOps += possible * OPS_PER_NEURON;
+        gameState.neuroFuel -= possible;
+        console.log(`[DEBUG] Neurons: ${neuronsBeforeClick} -> ${gameState.neurons}, PerClick: ${possible}`); UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
         UIManager.updateAllDisplays();
     }
     function handleBuyFactory(){
@@ -237,6 +254,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             UIManager.logMessage(`Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
         } else {
             UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
+        }
+        UIManager.updateAllDisplays();
+    }
+
+    function handleBuyNeurofuel(){
+        if(gameState.psychbucks >= gameState.neuroFuelCost){
+            gameState.psychbucks -= gameState.neuroFuelCost;
+            gameState.neuroFuel += NEUROFUEL_PURCHASE_AMOUNT;
+            const item = FOOD_OPTIONS[Math.floor(Math.random()*FOOD_OPTIONS.length)];
+            UIManager.logMessage(`Purchased ${item.emoji} ${item.name}!`, 'log-upgrade');
+            gameState.neuroFuelCost *= 1.05;
+        } else {
+            UIManager.logMessage('Not enough Psychbucks for food.', 'log-warning');
         }
         UIManager.updateAllDisplays();
     }
@@ -278,9 +308,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             calculatedPassiveRateThisTick *= dMultiplier * gMultiplier;
             calculatedPassiveRateThisTick = Math.max(0, calculatedPassiveRateThisTick);
         }
-        gameState.neurons += calculatedPassiveRateThisTick;
-        gameState.totalNeuronsGenerated += calculatedPassiveRateThisTick;
-        gameState.mindOps += calculatedPassiveRateThisTick * OPS_PER_NEURON;
+        if(gameState.neuroFuel > 0){
+            const possible = Math.min(calculatedPassiveRateThisTick, gameState.neuroFuel);
+            gameState.neurons += possible;
+            gameState.totalNeuronsGenerated += possible;
+            gameState.mindOps += possible * OPS_PER_NEURON;
+            gameState.neuroFuel -= possible;
+        }
         UIManager.updateAllDisplays();
     }
 
@@ -294,6 +328,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (dopamineSliderDOM) dopamineSliderDOM.addEventListener('input', handleDopamineSlider); else console.warn("Dopamine slider not found.");
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
         if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyFactory);
+        if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
         const btnDebugNeurons = document.getElementById('debug-add-neurons');
         const btnDebugPsychbucks = document.getElementById('debug-add-psychbucks');
         if (btnDebugNeurons) btnDebugNeurons.addEventListener('click', () => { gameState.neurons += 1000; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +1000 Neurons", "log-info"); }); else console.warn("Debug neurons button not found.");
@@ -327,6 +362,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UpgradeSystem.renderNeuronProliferationUpgrades();
         attachEventListeners();
         UIManager.updateFactoryDisplay();
+        UIManager.updateNeuroFuelDisplay();
         UIManager.updateAllDisplays();
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
         setInterval(gameLoop, 1000);
