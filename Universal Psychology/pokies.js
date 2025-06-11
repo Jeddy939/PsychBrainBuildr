@@ -78,22 +78,25 @@ export function initPokies(gameAPI) {
     }
 
     function spinReel(mesh, textEl, symbol, delay) {
-        const duration = 800 + delay;
-        const startRot = mesh.rotation.x;
-        const targetRot = startRot + Math.PI * 4;
-        const startTime = performance.now();
-        function anim(time) {
-            const t = Math.min((time - startTime) / duration, 1);
-            mesh.rotation.x = startRot + (targetRot - startRot) * t;
-            if (t < 1) {
-                requestAnimationFrame(anim);
-            } else {
-                mesh.rotation.x = 0;
-                updateReelSymbol(mesh, symbol);
-                textEl.textContent = symbol;
+        return new Promise(resolve => {
+            const duration = 800 + delay;
+            const startRot = mesh.rotation.x;
+            const targetRot = startRot + Math.PI * 4;
+            const startTime = performance.now();
+            function anim(time) {
+                const t = Math.min((time - startTime) / duration, 1);
+                mesh.rotation.x = startRot + (targetRot - startRot) * t;
+                if (t < 1) {
+                    requestAnimationFrame(anim);
+                } else {
+                    mesh.rotation.x = 0;
+                    updateReelSymbol(mesh, symbol);
+                    textEl.textContent = symbol;
+                    resolve();
+                }
             }
-        }
-        requestAnimationFrame(anim);
+            requestAnimationFrame(anim);
+        });
     }
 
     function render() {
@@ -103,7 +106,7 @@ export function initPokies(gameAPI) {
     render();
 
     // --- Spin Logic ---
-    spinBtn.addEventListener('click', () => {
+    spinBtn.addEventListener('click', async () => {
         const state = getGameState();
         if(state.psychbucks < 1) {
             logMessage('Not enough Psychbucks to spin.', 'log-warning');
@@ -120,10 +123,11 @@ export function initPokies(gameAPI) {
             results.push(row);
         }
 
+        const spinPromises = [];
         reelMeshes.forEach((rowMeshes, r) => {
             rowMeshes.forEach((mesh, c) => {
                 const delay = (r * 3 + c) * 100;
-                spinReel(mesh, reelsText[r][c], results[r][c], delay);
+                spinPromises.push(spinReel(mesh, reelsText[r][c], results[r][c], delay));
             });
         });
 
@@ -150,18 +154,16 @@ export function initPokies(gameAPI) {
 
             state.psychbucks += win;
             updateDisplays();
-            spinBtn.disabled = false;
         };
 
-        // ensure the button reactivates even if an error occurs
-        setTimeout(() => {
-            try {
-                resolveSpin();
-            } catch (err) {
-                console.error('Spin resolution error:', err);
-                spinBtn.disabled = false;
-            }
-        }, 1700);
+        try {
+            await Promise.all(spinPromises);
+            resolveSpin();
+        } catch (err) {
+            console.error('Spin resolution error:', err);
+        } finally {
+            spinBtn.disabled = false;
+        }
     });
 }
 
