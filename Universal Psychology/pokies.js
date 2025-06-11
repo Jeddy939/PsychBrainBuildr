@@ -127,22 +127,41 @@ export function initPokies(gameAPI) {
             });
         });
 
-        setTimeout(() => {
+        const resolveSpin = () => {
             let win = 0;
-            const mid = results[1];
-            if(mid[0] === mid[1] && mid[1] === mid[2]) {
-                win = payouts[mid[0]] || 0;
-                logMessage(`Jackpot! ${mid[0]} x3 +${win} PB`, 'log-unlock');
-            } else if (mid[0] === mid[1] || mid[1] === mid[2] || mid[0] === mid[2]) {
+            const lines = [
+                results[0],
+                results[1],
+                results[2],
+                [results[0][0], results[1][1], results[2][2]],
+                [results[0][2], results[1][1], results[2][0]]
+            ];
+
+            const jackpotLine = lines.find(l => l[0] === l[1] && l[1] === l[2]);
+            if (jackpotLine) {
+                win = payouts[jackpotLine[0]] || 0;
+                logMessage(`Jackpot! ${jackpotLine[0]} x3 +${win} PB`, 'log-unlock');
+            } else if (lines.some(l => l[0] === l[1] || l[1] === l[2] || l[0] === l[2])) {
                 win = 2;
                 logMessage(`Small win! +${win} PB`, 'log-info');
             } else {
                 logMessage('No win this time.', 'log-warning');
             }
+
             state.psychbucks += win;
             updateDisplays();
             spinBtn.disabled = false;
-        }, 1200);
+        };
+
+        // ensure the button reactivates even if an error occurs
+        setTimeout(() => {
+            try {
+                resolveSpin();
+            } catch (err) {
+                console.error('Spin resolution error:', err);
+                spinBtn.disabled = false;
+            }
+        }, 1700);
     });
 }
 
