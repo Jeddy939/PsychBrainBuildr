@@ -292,6 +292,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
         }
         UIManager.updateAllDisplays();
+        UpgradeSystem.renderNeuronProliferationUpgrades();
     }
 
     function handleBuyNeurofuel(){
