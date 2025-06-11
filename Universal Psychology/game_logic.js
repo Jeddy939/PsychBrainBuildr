@@ -455,6 +455,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         console.log("initGame finished");
     }
 
+    // Expose limited API for external modules like minigames
+    window.GameAPI = {
+        getGameState: () => gameState,
+        updateDisplays: UIManager.updateAllDisplays,
+        logMessage: UIManager.logMessage
+    };
+
     // =======================================================================
     // 13. START THE GAME
     // =======================================================================
