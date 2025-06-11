@@ -465,6 +465,22 @@ button:hover {
 
 /* Pokies Minigame */
 #pokies-area { text-align: center; }
+#pokies-threejs-container {
+    width: 100%;
+    height: 150px;
+    background-color: #000;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+    position: relative;
+}
+#pokies-threejs-container canvas {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    display: block;
+}
 .pokies-reels { display: flex; justify-content: space-around; margin: 10px 0; font-size: 1.4em; }
 .pokies-reels span { width: 30%; padding: 5px; border: 1px solid #ccc; border-radius: 4px; background-color: #fff; }
 #pokies-spin { background-color: #28a745; color: #fff; border: none; padding: 8px 12px; border-radius: 4px; cursor: pointer; }
