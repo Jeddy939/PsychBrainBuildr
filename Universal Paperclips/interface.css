@@ -592,14 +592,14 @@ p.clean3 {
 
 p.console {
     font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono", monospace;
-    font-size: 12;
+    font-size: 13px;
     color: white;
     margin-top: 0;
 }
 
 p.consoleOld {
     font-family: "Lucida Sans Typewriter", "Lucida Console", Monaco, "Bitstream Vera Sans Mono", monospace;
-    font-size: 12;
+    font-size: 13px;
     color: grey;
     margin-bottom: 0;
 }
@@ -787,3 +787,25 @@ p.hypnoDrone {
    border: 1px solid #ffffff;
 }
 
+
+/* Modernized overall layout */
+body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background-color: #f5f7fa;
+    color: #333;
+    margin: 0;
+    line-height: 1.4;
+}
+
+#page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+#consoleDiv {
+    background: #1e1e1e;
+    color: #39ff14;
+    border-radius: 4px;
+    padding: 10px;
+}
