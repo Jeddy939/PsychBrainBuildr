@@ -116,16 +116,16 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
-        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } if (factoryAreaDOM) { factoryAreaDOM.style.display = 'block'; UIManager.updateFactoryDisplay(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
+        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
         { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
         { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
         { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
     ];
     const neuronProliferationUpgrades_raw_data = [
-        { id: "prolifFactory", name: "Neuron Proliferation Factory", description: "Builds a facility for passive neuron growth (+0.5/sec).", costCurrency: "psychbucks", cost: 10, neuronBoost: 0.5, effectApplied: false, type: 'proliferation' },
+        { id: "prolifFactory", name: "Neuron Proliferation Factory", description: "Builds a facility for passive neuron growth (+0.5/sec).", costCurrency: "psychbucks", cost: 10, neuronBoost: 0.5, effectApplied: false, type: 'proliferation', action: () => { if(factoryAreaDOM) { factoryAreaDOM.style.display = 'block'; UIManager.updateFactoryDisplay(); } } },
         { id: "dendriticSprouting", name: "Dendritic Sprouting", description: "Increase passive neuron production by 0.1%.", costCurrency: "psychbucks", cost: 25, percentBoost: 0.1, effectApplied: false, dependsOn: "prolifFactory", type: 'proliferation' },
         { id: "myelination", name: "Myelination", description: "Boost production but consumes more fuel and raises anxiety.", costCurrency: "psychbucks", cost: 60, percentBoost: 20, extraFuel: 0.2, anxietyBoost: 5, effectApplied: false, dependsOn: "dendriticSprouting", type: 'proliferation' },
-        { id: "metabolicEfficiency", name: "Metabolic Efficiency", description: "Cuts Neurofuel consumption by 50%.", costCurrency: "psychbucks", cost: 80, effectApplied: false, dependsOn: "myelination", type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
+        { id: "metabolicEfficiency", name: "Metabolic Efficiency", description: "Cuts Neurofuel consumption by 50%.", costCurrency: "psychbucks", cost: 80, effectApplied: false, factoryRequirement: 4, type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
     ];
 
     const projectData = [
@@ -203,7 +203,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     const UpgradeSystem = {
         coreUpgrades: [], neuronProliferationUpgrades: [],
         init(coreData, proliferationData) { this.coreUpgrades = coreData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); this.neuronProliferationUpgrades = proliferationData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); UIManager.logMessage("UpgradeSystem Initialized. Core: " + this.coreUpgrades.length + ", Prolif: " + this.neuronProliferationUpgrades.length, "log-info"); },
-        getFilteredUpgrades(type) { const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; return source.filter(upg => { if (upg.dependsOn) { const dep = this.coreUpgrades.find(u => u.id === upg.dependsOn) || this.neuronProliferationUpgrades.find(u => u.id === upg.dependsOn); if (!dep || !dep.effectApplied) return false; } return true; }); },
+        getFilteredUpgrades(type) {
+            const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades;
+            return source.filter(upg => {
+                if (upg.dependsOn) {
+                    const dep = this.coreUpgrades.find(u => u.id === upg.dependsOn) || this.neuronProliferationUpgrades.find(u => u.id === upg.dependsOn);
+                    if (!dep || !dep.effectApplied) return false;
+                }
+                if (typeof upg.factoryRequirement === 'number' && gameState.factoryCount < upg.factoryRequirement) return false;
+                return true;
+            });
+        },
         renderCoreUpgrades() { UIManager.logMessage("[UpgradeSystem] renderCoreUpgrades called.", "log-info"); const upgs = this.getFilteredUpgrades("core"); if (!upgradesListElementDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: upgradesListElementDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, upgradesListElementDOM, "core"); this.updateUpgradeButtons(); },
         renderNeuronProliferationUpgrades() { UIManager.logMessage("[UpgradeSystem] renderNeuronProliferationUpgrades called.", "log-info"); if (neuronProliferationAreaDOM && neuronProliferationAreaDOM.style.display !== 'none') { const upgs = this.getFilteredUpgrades("proliferation"); if (!neuronProliferationUpgradesListDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: neuronProliferationUpgradesListDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, neuronProliferationUpgradesListDOM, "proliferation"); this.updateUpgradeButtons(); } else { UIManager.logMessage("[UpgradeSystem] Neuron prolif area hidden, not rendering.", "log-info"); } },
         purchaseUpgrade(upgradeId, upgradeType) {
