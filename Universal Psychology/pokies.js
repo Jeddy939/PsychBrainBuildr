@@ -14,14 +14,17 @@ export function initPokies(gameAPI) {
     };
 
     const spinBtn = document.getElementById('pokies-spin');
-    const reelsText = [
-        document.getElementById('reel1'),
-        document.getElementById('reel2'),
-        document.getElementById('reel3')
-    ];
+    const reelsText = [];
+    for (let r = 1; r <= 3; r++) {
+        const row = [];
+        for (let c = 1; c <= 3; c++) {
+            row.push(document.getElementById(`reel${r}${c}`));
+        }
+        reelsText.push(row);
+    }
 
     const threeContainer = document.getElementById('pokies-threejs-container');
-    if(!spinBtn || reelsText.some(r => !r) || !threeContainer) return;
+    if(!spinBtn || reelsText.flat().some(r => !r) || !threeContainer) return;
 
     // --- Three.js Setup ---
     const scene = new THREE.Scene();
@@ -54,10 +57,18 @@ export function initPokies(gameAPI) {
         return new THREE.Mesh(geometry, material);
     }
 
-    const reelMeshes = [createReelMesh('?'), createReelMesh('?'), createReelMesh('?')];
-    reelMeshes[0].position.x = -1.2;
-    reelMeshes[2].position.x = 1.2;
-    reelMeshes.forEach(m => scene.add(m));
+    const reelMeshes = [];
+    for (let r = 0; r < 3; r++) {
+        const row = [];
+        for (let c = 0; c < 3; c++) {
+            const mesh = createReelMesh('?');
+            mesh.position.x = (c - 1) * 1.2;
+            mesh.position.y = (1 - r) * 1.2;
+            scene.add(mesh);
+            row.push(mesh);
+        }
+        reelMeshes.push(row);
+    }
 
     function updateReelSymbol(mesh, sym) {
         const tex = createSymbolTexture(sym);
@@ -101,19 +112,28 @@ export function initPokies(gameAPI) {
         spinBtn.disabled = true;
         state.psychbucks -= 1;
         const results = [];
-        for(let i=0;i<3;i++) {
-            results.push(symbols[Math.floor(Math.random()*symbols.length)]);
+        for (let r = 0; r < 3; r++) {
+            const row = [];
+            for (let c = 0; c < 3; c++) {
+                row.push(symbols[Math.floor(Math.random()*symbols.length)]);
+            }
+            results.push(row);
         }
-        spinReel(reelMeshes[0], reelsText[0], results[0], 0);
-        spinReel(reelMeshes[1], reelsText[1], results[1], 200);
-        spinReel(reelMeshes[2], reelsText[2], results[2], 400);
+
+        reelMeshes.forEach((rowMeshes, r) => {
+            rowMeshes.forEach((mesh, c) => {
+                const delay = (r * 3 + c) * 100;
+                spinReel(mesh, reelsText[r][c], results[r][c], delay);
+            });
+        });
 
         setTimeout(() => {
             let win = 0;
-            if(results[0] === results[1] && results[1] === results[2]) {
-                win = payouts[results[0]] || 0;
-                logMessage(`Jackpot! ${results[0]} x3 +${win} PB`, 'log-unlock');
-            } else if (results[0] === results[1] || results[1] === results[2] || results[0] === results[2]) {
+            const mid = results[1];
+            if(mid[0] === mid[1] && mid[1] === mid[2]) {
+                win = payouts[mid[0]] || 0;
+                logMessage(`Jackpot! ${mid[0]} x3 +${win} PB`, 'log-unlock');
+            } else if (mid[0] === mid[1] || mid[1] === mid[2] || mid[0] === mid[2]) {
                 win = 2;
                 logMessage(`Small win! +${win} PB`, 'log-info');
             } else {
