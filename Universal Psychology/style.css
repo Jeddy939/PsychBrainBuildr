@@ -467,7 +467,7 @@ button:hover {
 #pokies-area { text-align: center; }
 #pokies-threejs-container {
     width: 100%;
-    height: 150px;
+    height: 180px;
     background-color: #000;
     border: 1px solid #ccc;
     margin-bottom: 10px;
