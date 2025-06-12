@@ -252,7 +252,7 @@ export function standaloneInitFourDChess(canvasContainerId) {
     gameRenderer = new THREE.WebGLRenderer({ antialias: true });
     gameRenderer.setSize(container.clientWidth, container.clientHeight);
     gameRenderer.setPixelRatio(window.devicePixelRatio);
-    gameRenderer.outputEncoding = THREE.sRGBEncoding;
+    gameRenderer.outputColorSpace = THREE.SRGBColorSpace;
     container.appendChild(gameRenderer.domElement);
 
     gameControls = new OrbitControls(gameCamera, gameRenderer.domElement); // Add controls
