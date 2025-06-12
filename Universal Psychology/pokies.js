@@ -4,7 +4,18 @@ import * as THREE from 'three';
 export function initPokies(gameAPI) {
     const { getGameState, updateDisplays, logMessage } = gameAPI;
 
+    // Symbols used on the reels
     const symbols = ['\u{1F352}', '\u{1F514}', '\u{1F34B}', '\u{2B50}', '\u{1F48E}'];
+
+    // Layout for each reel.  Eight segments per wheel gives a smoother spin and
+    // allows predetermined symbol order similar to more advanced slot machines.
+    const reelLayouts = [
+        ['\u{1F352}', '\u{1F34B}', '\u{1F514}', '\u{2B50}', '\u{1F48E}', '\u{1F34B}', '\u{2B50}', '\u{1F352}'],
+        ['\u{1F514}', '\u{1F352}', '\u{1F34B}', '\u{2B50}', '\u{1F352}', '\u{1F48E}', '\u{1F34B}', '\u{2B50}'],
+        ['\u{1F34B}', '\u{1F48E}', '\u{1F352}', '\u{1F514}', '\u{1F34B}', '\u{2B50}', '\u{1F48E}', '\u{1F352}']
+    ];
+
+    // Payout table for winning lines
     const payouts = {
         '\u{1F352}': 20, // cherries
         '\u{1F514}': 15, // bell
@@ -60,7 +71,8 @@ export function initPokies(gameAPI) {
     const reelMeshes = [];
     const wheelGroups = [];
     const wheelRadius = 1.2;
-    const angleStep = (2 * Math.PI) / symbols.length;
+    const SEGMENT_COUNT = reelLayouts[0].length;
+    const angleStep = (2 * Math.PI) / SEGMENT_COUNT;
 
     for (let c = 0; c < 3; c++) {
         const group = new THREE.Group();
@@ -68,36 +80,22 @@ export function initPokies(gameAPI) {
         scene.add(group);
         wheelGroups.push(group);
 
-        const column = [];
-        for (let r = 0; r < 3; r++) {
-            const mesh = createReelMesh('?');
-            mesh.position.y = (1 - r) * 1.2;
-            mesh.position.z = wheelRadius;
+        const meshes = [];
+        for (let i = 0; i < SEGMENT_COUNT; i++) {
+            const sym = reelLayouts[c][i];
+            const mesh = createReelMesh(sym);
+            const angle = i * angleStep;
+            mesh.position.y = Math.sin(angle) * wheelRadius;
+            mesh.position.z = Math.cos(angle) * wheelRadius;
+            mesh.rotation.x = angle;
             group.add(mesh);
-            column.push(mesh);
+            meshes.push(mesh);
         }
-        reelMeshes.push(column);
-
-        // Additional invisible meshes around the wheel for smoother spin
-        for (let i = 3; i < symbols.length; i++) {
-            const extra = createReelMesh(symbols[i]);
-            const angle = (i - 1) * angleStep;
-            extra.position.y = Math.sin(angle) * wheelRadius;
-            extra.position.z = Math.cos(angle) * wheelRadius;
-            extra.rotation.x = angle;
-            extra.visible = false;
-            group.add(extra);
-        }
+        reelMeshes.push(meshes);
     }
 
-    function updateReelSymbol(mesh, sym) {
-        const tex = createSymbolTexture(sym);
-        mesh.material.map.dispose();
-        mesh.material.map = tex;
-        mesh.material.needsUpdate = true;
-    }
-
-
+    // No need for texture updates during spin since each wheel already
+    // contains meshes for all its symbols.
 
     function render() {
         renderer.render(scene, camera);
@@ -120,7 +118,7 @@ export function initPokies(gameAPI) {
         function spinWheel(col, centerIdx) {
             return new Promise(res => {
                 const group = wheelGroups[col];
-                const startRot = 0;
+                const startRot = group.rotation.x;
                 const targetRot = -centerIdx * angleStep - Math.PI * 6;
                 const duration = 1200 + col * 300;
                 const startTime = performance.now();
@@ -140,13 +138,14 @@ export function initPokies(gameAPI) {
 
         const spinPromises = [];
         for(let c=0; c<3; c++){
-            const idx = Math.floor(Math.random()*symbols.length);
+            const segmentCount = reelLayouts[c].length;
+            const idx = Math.floor(Math.random()*segmentCount);
             centerIndexes[c] = idx;
             spinPromises.push(spinWheel(c, idx));
 
-            results[0][c] = symbols[(idx - 1 + symbols.length) % symbols.length];
-            results[1][c] = symbols[idx];
-            results[2][c] = symbols[(idx + 1) % symbols.length];
+            results[0][c] = reelLayouts[c][(idx - 1 + segmentCount) % segmentCount];
+            results[1][c] = reelLayouts[c][idx];
+            results[2][c] = reelLayouts[c][(idx + 1) % segmentCount];
         }
 
 
@@ -154,7 +153,6 @@ export function initPokies(gameAPI) {
             for(let r=0;r<3;r++){
                 for(let c=0;c<3;c++){
                     reelsText[r][c].textContent = results[r][c];
-                    updateReelSymbol(reelMeshes[c][r], results[r][c]);
                 }
             }
 
