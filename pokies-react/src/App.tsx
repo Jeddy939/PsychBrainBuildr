@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import SlotMachine, { SlotMachineProps } from './SlotMachine';
+import SlotMachine from './SlotMachine';
+import type { SlotMachineProps } from './SlotMachine';
 import './App.css';
 
 function App() {
