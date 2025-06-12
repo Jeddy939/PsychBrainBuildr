@@ -1,4 +1,10 @@
-import { useRef, useState, useImperativeHandle, forwardRef } from 'react';
+import {
+  useRef,
+  useState,
+  useImperativeHandle,
+  forwardRef,
+  useEffect,
+} from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 
@@ -40,7 +46,9 @@ const Reel = forwardRef<ReelHandle, ReelProps>(({ layout, x }, ref) => {
   const wheelRadius = 1.2;
 
   const meshes = useRef<THREE.Mesh[]>([]);
-  if (meshes.current.length === 0) {
+
+  useEffect(() => {
+    if (!group.current || meshes.current.length > 0) return;
     layout.forEach((sym, i) => {
       const geo = new THREE.PlaneGeometry(1, 1);
       const mat = new THREE.MeshBasicMaterial({
@@ -55,7 +63,7 @@ const Reel = forwardRef<ReelHandle, ReelProps>(({ layout, x }, ref) => {
       meshes.current.push(m);
       group.current.add(m);
     });
-  }
+  }, []);
 
   useImperativeHandle(ref, () => ({
     spin: (idx: number) => {
