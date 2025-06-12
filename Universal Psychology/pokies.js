@@ -58,16 +58,36 @@ export function initPokies(gameAPI) {
     }
 
     const reelMeshes = [];
-    for (let r = 0; r < 3; r++) {
-        const row = [];
-        for (let c = 0; c < 3; c++) {
+    const wheelGroups = [];
+    const wheelRadius = 1.2;
+    const angleStep = (2 * Math.PI) / symbols.length;
+
+    for (let c = 0; c < 3; c++) {
+        const group = new THREE.Group();
+        group.position.x = (c - 1) * 2.0;
+        scene.add(group);
+        wheelGroups.push(group);
+
+        const column = [];
+        for (let r = 0; r < 3; r++) {
             const mesh = createReelMesh('?');
-            mesh.position.x = (c - 1) * 1.2;
             mesh.position.y = (1 - r) * 1.2;
-            scene.add(mesh);
-            row.push(mesh);
+            mesh.position.z = wheelRadius;
+            group.add(mesh);
+            column.push(mesh);
         }
-        reelMeshes.push(row);
+        reelMeshes.push(column);
+
+        // Additional invisible meshes around the wheel for smoother spin
+        for (let i = 3; i < symbols.length; i++) {
+            const extra = createReelMesh(symbols[i]);
+            const angle = (i - 1) * angleStep;
+            extra.position.y = Math.sin(angle) * wheelRadius;
+            extra.position.z = Math.cos(angle) * wheelRadius;
+            extra.rotation.x = angle;
+            extra.visible = false;
+            group.add(extra);
+        }
     }
 
     function updateReelSymbol(mesh, sym) {
@@ -77,27 +97,7 @@ export function initPokies(gameAPI) {
         mesh.material.needsUpdate = true;
     }
 
-    function spinReel(mesh, textEl, symbol, delay) {
-        return new Promise(resolve => {
-            const duration = 800 + delay;
-            const startRot = mesh.rotation.x;
-            const targetRot = startRot + Math.PI * 4;
-            const startTime = performance.now();
-            function anim(time) {
-                const t = Math.min((time - startTime) / duration, 1);
-                mesh.rotation.x = startRot + (targetRot - startRot) * t;
-                if (t < 1) {
-                    requestAnimationFrame(anim);
-                } else {
-                    mesh.rotation.x = 0;
-                    updateReelSymbol(mesh, symbol);
-                    textEl.textContent = symbol;
-                    resolve();
-                }
-            }
-            requestAnimationFrame(anim);
-        });
-    }
+
 
     function render() {
         renderer.render(scene, camera);
@@ -114,24 +114,50 @@ export function initPokies(gameAPI) {
         }
         spinBtn.disabled = true;
         state.psychbucks -= 1;
-        const results = [];
-        for (let r = 0; r < 3; r++) {
-            const row = [];
-            for (let c = 0; c < 3; c++) {
-                row.push(symbols[Math.floor(Math.random()*symbols.length)]);
-            }
-            results.push(row);
+        const results = [[],[],[]];
+        const centerIndexes = [];
+
+        function spinWheel(col, centerIdx) {
+            return new Promise(res => {
+                const group = wheelGroups[col];
+                const startRot = 0;
+                const targetRot = -centerIdx * angleStep - Math.PI * 6;
+                const duration = 1200 + col * 300;
+                const startTime = performance.now();
+                function anim(time){
+                    const t = Math.min((time - startTime) / duration, 1);
+                    group.rotation.x = startRot + (targetRot - startRot) * t;
+                    if(t < 1){
+                        requestAnimationFrame(anim);
+                    } else {
+                        group.rotation.x = -centerIdx * angleStep;
+                        res();
+                    }
+                }
+                requestAnimationFrame(anim);
+            });
         }
 
         const spinPromises = [];
-        reelMeshes.forEach((rowMeshes, r) => {
-            rowMeshes.forEach((mesh, c) => {
-                const delay = (r * 3 + c) * 100;
-                spinPromises.push(spinReel(mesh, reelsText[r][c], results[r][c], delay));
-            });
-        });
+        for(let c=0; c<3; c++){
+            const idx = Math.floor(Math.random()*symbols.length);
+            centerIndexes[c] = idx;
+            spinPromises.push(spinWheel(c, idx));
+
+            results[0][c] = symbols[(idx - 1 + symbols.length) % symbols.length];
+            results[1][c] = symbols[idx];
+            results[2][c] = symbols[(idx + 1) % symbols.length];
+        }
+
 
         const resolveSpin = () => {
+            for(let r=0;r<3;r++){
+                for(let c=0;c<3;c++){
+                    reelsText[r][c].textContent = results[r][c];
+                    updateReelSymbol(reelMeshes[c][r], results[r][c]);
+                }
+            }
+
             let win = 0;
             const lines = [
                 results[0],
@@ -141,15 +167,22 @@ export function initPokies(gameAPI) {
                 [results[0][2], results[1][1], results[2][0]]
             ];
 
-            const jackpotLine = lines.find(l => l[0] === l[1] && l[1] === l[2]);
-            if (jackpotLine) {
-                win = payouts[jackpotLine[0]] || 0;
-                logMessage(`Jackpot! ${jackpotLine[0]} x3 +${win} PB`, 'log-unlock');
-            } else if (lines.some(l => l[0] === l[1] || l[1] === l[2] || l[0] === l[2])) {
-                win = 2;
-                logMessage(`Small win! +${win} PB`, 'log-info');
-            } else {
-                logMessage('No win this time.', 'log-warning');
+            const jackpotLines = lines.filter(l => l[0] === l[1] && l[1] === l[2]);
+            jackpotLines.forEach(line => {
+                const amt = payouts[line[0]] || 0;
+                win += amt;
+                logMessage(`Line win! ${line[0]} x3 +${amt} PB`, 'log-unlock');
+            });
+
+            if(jackpotLines.length === 0){
+                let pairCount = 0;
+                lines.forEach(l => { if(l[0] === l[1] || l[1] === l[2] || l[0] === l[2]) pairCount++; });
+                if(pairCount>0){
+                    win += pairCount*2;
+                    logMessage(`Small win! ${pairCount} line(s) +${pairCount*2} PB`, 'log-info');
+                } else {
+                    logMessage('No win this time.', 'log-warning');
+                }
             }
 
             state.psychbucks += win;

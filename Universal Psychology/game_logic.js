@@ -4,7 +4,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. GAME STATE OBJECT ---
     const gameState = {
         neurons: 0,
-        psychbucks: 0,
+        psychbucks: 50,
         neuronsPerClick: 1,
         currentBrainLevel: 0,
         passiveNeuronsPerSecond: 0,
