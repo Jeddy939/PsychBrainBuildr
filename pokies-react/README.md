@@ -14,14 +14,15 @@ The app will start with Vite and render a simple slot machine that can be spun u
 ## Build & Deploy
 
 Running a production build will output the compiled files to `dist/` and then
-copy them into the main project under `../Universal Psychology/pokies-react/`.
+copy them into the main project under `../Universal Psychology/pokies-react/`
+using a small Node script.
 
 ```bash
 npm run build
 ```
 
-The above command automatically triggers the `postbuild` script which performs
-the copy. If you prefer an explicit command you can run:
+The above command automatically triggers the `postbuild` script which runs the
+Node copy operation. If you prefer an explicit command you can run:
 
 ```bash
 npm run build:deploy
