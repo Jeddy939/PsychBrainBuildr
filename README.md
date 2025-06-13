@@ -48,6 +48,7 @@ A Vite dev server will start.
 ```bash
 npm run build
 ```
-
-After the build completes, copy the contents of `pokies-react/dist/` into `Universal Psychology/pokies-react/` so that the latest assets are available to the main game.
+The build command automatically runs a `postbuild` script that copies the contents
+of `pokies-react/dist/` into `Universal Psychology/pokies-react/` using Node's
+filesystem API. This ensures the latest assets are available to the main game.
 
