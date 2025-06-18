@@ -430,6 +430,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UpgradeSystem.renderCoreUpgrades();
         UpgradeSystem.renderNeuronProliferationUpgrades();
         UIManager.updateFactoryDisplay();
+        UIManager.callUpdateBrainVisual();
     }
 
     function loadGame(slot = currentSaveSlot) {
@@ -439,8 +440,18 @@ document.addEventListener('DOMContentLoaded', async () => {
             const data = JSON.parse(raw);
             Object.assign(gameState, data.gameState || {});
             gameState.neuroFuelCost = calculateNextNeuroFuelCost();
-            if(Array.isArray(data.coreUpgrades)) UpgradeSystem.coreUpgrades = data.coreUpgrades;
-            if(Array.isArray(data.proliferationUpgrades)) UpgradeSystem.neuronProliferationUpgrades = data.proliferationUpgrades;
+            if(Array.isArray(data.coreUpgrades)) {
+                data.coreUpgrades.forEach(saved => {
+                    const existing = UpgradeSystem.coreUpgrades.find(u => u.id === saved.id);
+                    if(existing) Object.assign(existing, saved);
+                });
+            }
+            if(Array.isArray(data.proliferationUpgrades)) {
+                data.proliferationUpgrades.forEach(saved => {
+                    const existing = UpgradeSystem.neuronProliferationUpgrades.find(u => u.id === saved.id);
+                    if(existing) Object.assign(existing, saved);
+                });
+            }
             ProjectSystem.loadFromSave(data.purchasedProjects);
             applyLoadedUpgradeEffects();
         } catch(e) { console.error('Load failed', e); }
