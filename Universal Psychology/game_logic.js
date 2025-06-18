@@ -120,11 +120,15 @@ document.addEventListener('DOMContentLoaded', async () => {
     const brainStatsData = { labels: [], neurons: [], fuel: [] };
     let brainChart = null;
 
+    // Intervals for automatic food purchasing
+    let intermittentFastingIntervalId = null;
+    let irregularSnacksTimeoutId = null;
+
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
         { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
         { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
-        { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
+        { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); startIrregularSnacks(); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
         { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
     ];
     const neuronProliferationUpgrades_raw_data = [
@@ -132,6 +136,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: "dendriticSprouting", name: "Dendritic Sprouting", description: "Increase passive neuron production by 0.1%.", costCurrency: "psychbucks", cost: 25, percentBoost: 0.1, effectApplied: false, dependsOn: "prolifFactory", type: 'proliferation' },
         { id: "myelination", name: "Myelination", description: "Boost production but consumes more fuel and raises anxiety.", costCurrency: "psychbucks", cost: 60, percentBoost: 20, extraFuel: 0.2, anxietyBoost: 5, effectApplied: false, dependsOn: "dendriticSprouting", type: 'proliferation' },
         { id: "metabolicEfficiency", name: "Metabolic Efficiency", description: "Cuts Neurofuel consumption by 50%.", costCurrency: "psychbucks", cost: 80, effectApplied: false, factoryRequirement: 4, type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
+        { id: "intermittentFasting", name: "Intermittent Fasting", description: "Automatically purchase fuel every 10 seconds.", costCurrency: "psychbucks", cost: 120, effectApplied: false, dependsOn: "metabolicEfficiency", type: 'proliferation', action: () => { startIntermittentFasting(); } },
+        { id: "metabolicEfficiency2", name: "Metabolic Efficiency II", description: "Further cuts fuel use by 50%.", costCurrency: "psychbucks", cost: 200, effectApplied: false, dependsOn: "metabolicEfficiency", brainRequirement: 3, type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
     ];
 
     const projectData = [
@@ -229,6 +235,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     if (!dep || !dep.effectApplied) return false;
                 }
                 if (typeof upg.factoryRequirement === 'number' && gameState.factoryCount < upg.factoryRequirement) return false;
+                if (typeof upg.brainRequirement === 'number' && gameState.currentBrainLevel < upg.brainRequirement) return false;
                 return true;
             });
         },
@@ -324,6 +331,25 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         UIManager.updateAllDisplays();
     }
+
+    function startIntermittentFasting(){
+        if(intermittentFastingIntervalId) return;
+        intermittentFastingIntervalId = setInterval(handleBuyNeurofuel, 10000);
+        UIManager.logMessage('Intermittent Fasting activated: auto-buy every 10s.', 'log-info');
+    }
+
+    function startIrregularSnacks(){
+        if(irregularSnacksTimeoutId) return;
+        const schedule = () => {
+            const delay = Math.random() * 9000 + 1000;
+            irregularSnacksTimeoutId = setTimeout(() => {
+                handleBuyNeurofuel();
+                schedule();
+            }, delay);
+        };
+        schedule();
+        UIManager.logMessage('Irregular Snacks activated.', 'log-info');
+    }
     function handleDopamineSlider(event) { gameState.dopamineLevel = parseInt(event.target.value); if(dopamineLevelDisplayDOM) dopamineLevelDisplayDOM.textContent = gameState.dopamineLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
     function handleGabaSlider(event) { gameState.gabaLevel = parseInt(event.target.value); if(gabaLevelDisplayDOM) gabaLevelDisplayDOM.textContent = gameState.gabaLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
 
@@ -372,6 +398,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 QuestionSystem.unlockDifficultyLevel(1);
             } else if(upg.id === 'biggerBrain3') {
                 QuestionSystem.unlockDifficultyLevel(2);
+                startIrregularSnacks();
             } else if(upg.id === 'amygdalaActivation') {
                 if(!AnxietySystem.isAmygdalaFunctioning()) AnxietySystem.activateAmygdala();
             }
@@ -380,6 +407,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(!upg.effectApplied) return;
             if(upg.id === 'prolifFactory') {
                 if(factoryAreaDOM) factoryAreaDOM.style.display = 'block';
+            } else if(upg.id === 'intermittentFasting') {
+                startIntermittentFasting();
             }
         });
         UIManager.updateQuestionAreaUIVisibility();
