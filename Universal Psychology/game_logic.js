@@ -271,14 +271,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 9. HELPER FUNCTIONS (Event Handlers, etc. - DEFINED BEFORE attachEventListeners and initGame)
     // =======================================================================
     function handleManualGeneration() {
-        console.log("[DEBUG] handleManualGeneration CALLED"); UIManager.logMessage("handleManualGeneration called.", "log-info");
-        if (AnxietySystem.isAttackCurrentlyActive()) { console.log("[DEBUG] Manual generation BLOCKED by anxiety attack."); UIManager.logMessage("Brain recovering... clicking disabled (Anxiety Active).", "log-warning"); return; }
+        if (AnxietySystem.isAttackCurrentlyActive()) { UIManager.logMessage("Brain recovering... clicking disabled (Anxiety Active).", "log-warning"); return; }
         const possible = Math.min(gameState.neuronsPerClick, gameState.neuroFuel / gameState.manualFuelMultiplier);
         if(possible <= 0){ UIManager.logMessage('Out of NeuroFuel!', 'log-warning'); return; }
         let neuronsBeforeClick = gameState.neurons; gameState.neurons += possible; gameState.totalNeuronsGenerated += possible;
         gameState.mindOps += possible * OPS_PER_NEURON;
         gameState.neuroFuel -= possible * gameState.manualFuelMultiplier;
-        console.log(`[DEBUG] Neurons: ${neuronsBeforeClick} -> ${gameState.neurons}, PerClick: ${possible}`); UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
+        UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
         UIManager.updateAllDisplays();
     }
     function handleBuyProliferationFactory(){
@@ -397,8 +396,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 11. EVENT LISTENERS ATTACHMENT
     // =======================================================================
     function attachEventListeners() {
-        console.log("Attaching event listeners...");
-        if (clickButtonDOM) { clickButtonDOM.addEventListener('click', handleManualGeneration); console.log("Listener attached to clickButtonDOM."); UIManager.logMessage("Click listener ready.", "log-info"); }
+        if (clickButtonDOM) { clickButtonDOM.addEventListener('click', handleManualGeneration); UIManager.logMessage("Click listener ready.", "log-info"); }
         else { console.error("clickButtonDOM is null."); UIManager.logMessage("ERR: Click button not found!", "log-warning"); }
         if (dopamineSliderDOM) dopamineSliderDOM.addEventListener('input', handleDopamineSlider); else console.warn("Dopamine slider not found.");
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
@@ -413,19 +411,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (closeInstructionsBtnDOM) closeInstructionsBtnDOM.addEventListener('click', () => {
             if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'none';
         });
-        const btnDebugNeurons = document.getElementById('debug-add-neurons');
-        const btnDebugPsychbucks = document.getElementById('debug-add-psychbucks');
-        const btnDebugReset = document.getElementById('debug-reset-game');
-        if (btnDebugNeurons) btnDebugNeurons.addEventListener('click', () => { gameState.neurons += 1000; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +1000 Neurons", "log-info"); }); else console.warn("Debug neurons button not found.");
-        if (btnDebugPsychbucks) btnDebugPsychbucks.addEventListener('click', () => { gameState.psychbucks += 100; UIManager.updateAllDisplays(); UIManager.logMessage("DEBUG: +100 Psychbucks", "log-info"); }); else console.warn("Debug psychbucks button not found.");
-        if (btnDebugReset) btnDebugReset.addEventListener('click', resetGame); else console.warn("Debug reset button not found.");
     }
 
     // =======================================================================
     // 12. INIT GAME FUNCTION
     // =======================================================================
     async function initGame() {
-        UIManager.logMessage("Initializing Game...", "log-info"); console.log("initGame started");
+        UIManager.logMessage("Initializing Game...", "log-info");
         try {
             UIManager.logMessage("Fetching questions...", "log-info");
             const response = await fetch('questions.json');
@@ -453,7 +445,6 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
         setInterval(gameLoop, 1000);
         setInterval(saveGame, AUTO_SAVE_INTERVAL);
-        console.log("initGame finished");
     }
 
     // Expose limited API for external modules like minigames
