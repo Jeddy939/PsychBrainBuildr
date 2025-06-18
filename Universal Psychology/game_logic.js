@@ -183,7 +183,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(buyFactoryBtnDOM) buyFactoryBtnDOM.disabled = gameState.psychbucks < gameState.factoryCost;
         },
         updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;},
-        playBrainUpgradeAnimation(imgSrc="images/brain-upgrade.png"){
+        // Path to brain upgrade image is relative to index.html, which lives
+        // inside the "Universal Psychology" folder. The image itself is stored
+        // in the repository root "images" directory, so the correct relative
+        // path needs to go up one level.
+        playBrainUpgradeAnimation(imgSrc="../images/brain-upgrade.png"){
             const overlay=document.getElementById("upgrade-animation-overlay");
             if(!overlay) return;
             overlay.innerHTML="";
