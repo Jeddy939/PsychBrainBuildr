@@ -162,7 +162,15 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 6. QUESTION SYSTEM MODULE OBJECT ---
     const QuestionSystem = {
-        allQuestionsData: [], baseRewardsByDifficultyValue: { 0: 1, 1: 3, 2: 5 }, currentQuestionIndex: -1, difficultyUnlocked: -1, currentStreakCount: 0, currentStreakBonus: 0,
+        allQuestionsData: [],
+        // Base rewards represent the psychbuck payout for each question
+        // difficulty at brain level 1. Rewards scale up with further
+        // brain upgrades.
+        baseRewardsByDifficultyValue: { 0: 4, 1: 6, 2: 8 },
+        currentQuestionIndex: -1,
+        difficultyUnlocked: -1,
+        currentStreakCount: 0,
+        currentStreakBonus: 0,
         init(questionsSourceArray) { this.allQuestionsData = questionsSourceArray || []; this.currentQuestionIndex = -1; this.difficultyUnlocked = -1; this.currentStreakCount = 0; this.currentStreakBonus = 0; UIManager.logMessage("QuestionSystem Initialized (" + this.allQuestionsData.length + " Qs).", "log-info"); if (this.allQuestionsData.length === 0 && questionsSourceArray && questionsSourceArray.length > 0) { UIManager.logMessage("QS WARNING: questionsSourceArray had items, but allQuestionsData is empty post-assignment!", "log-warning"); } else if (this.allQuestionsData.length === 0) { UIManager.logMessage("QS WARNING: Initialized with an empty questions array!", "log-warning"); } },
         getCurrentQuestionIndex() { return this.currentQuestionIndex; },
         setOverallUnlockState(isUnlocked) { gameState.questionsActuallyUnlocked = isUnlocked; UIManager.updateQuestionAreaUIVisibility(); },
@@ -183,7 +191,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             if (!gameState.questionsActuallyUnlocked || this.currentQuestionIndex === -1 || !this.allQuestionsData[this.currentQuestionIndex]) return;
             const question = this.allQuestionsData[this.currentQuestionIndex]; const isCorrect = selectedIndex === question.correctAnswerIndex;
             if (isCorrect) {
-                const baseReward = this.baseRewardsByDifficultyValue[question.difficulty] || 1; const actualPsychbucksEarned = baseReward + this.currentStreakBonus; gameState.psychbucks += actualPsychbucksEarned;
+                const baseReward = this.baseRewardsByDifficultyValue[question.difficulty] || 1;
+                const levelMultiplier = Math.pow(2, Math.max(gameState.currentBrainLevel - 1, 0));
+                const rewardWithScaling = baseReward * levelMultiplier;
+                const actualPsychbucksEarned = rewardWithScaling + this.currentStreakBonus;
+                gameState.psychbucks += actualPsychbucksEarned;
                 UIManager.displayFeedback(`Correct!`, 'correct'); this.currentStreakCount++;
                 UIManager.displayFeedback(this.currentStreakCount > 1 ? `Streak: ${this.currentStreakCount}! +${this.currentStreakBonus} bonus. Total: ${actualPsychbucksEarned} PB!` : `Streak Started! Total: ${actualPsychbucksEarned} PB!`, 'streak-bonus');
                 UIManager.logMessage(`Correct: +${actualPsychbucksEarned} PB (Streak: ${this.currentStreakCount})`, 'log-info'); this.currentStreakBonus += baseReward;
