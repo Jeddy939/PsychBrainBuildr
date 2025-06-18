@@ -23,7 +23,17 @@ document.addEventListener('DOMContentLoaded', async () => {
         // anxietyMeter, timeAtHighDopamine, isAnxietyAttackActive are now in AnxietySystem
         questionsActuallyUnlocked: false,
         // isAmygdalaActive is effectively AnxietySystem.isAmygdalaFunctioning()
-    }; 
+    };
+
+    function calculateNextNeuroFuelCost(){
+        const level = Math.max(gameState.currentBrainLevel, 1);
+        let max = 4;
+        if(level >= 3) max = 16;
+        else if(level >= 2) max = 8;
+        return Math.floor(Math.random() * max) + 1;
+    }
+
+    gameState.neuroFuelCost = calculateNextNeuroFuelCost();
 
     // --- 9. PROJECT SYSTEM MODULE ---
     const ProjectSystem = {
@@ -126,9 +136,9 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
-        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
-        { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
-        { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); startIrregularSnacks(); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
+        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
+        { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
+        { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); startIrregularSnacks(); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
         { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
     ];
     const neuronProliferationUpgrades_raw_data = [
@@ -325,7 +335,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const item = FOOD_OPTIONS[Math.floor(Math.random()*FOOD_OPTIONS.length)];
             gameState.neuroFuel += item.fuel;
             UIManager.logMessage(`Purchased ${item.emoji} ${item.name}! (+${item.fuel} Fuel)`, 'log-upgrade');
-            gameState.neuroFuelCost *= 1.05;
+            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
         } else {
             UIManager.logMessage('Not enough Psychbucks for food.', 'log-warning');
         }
@@ -423,6 +433,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         try {
             const data = JSON.parse(raw);
             Object.assign(gameState, data.gameState || {});
+            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
             if(Array.isArray(data.coreUpgrades)) UpgradeSystem.coreUpgrades = data.coreUpgrades;
             if(Array.isArray(data.proliferationUpgrades)) UpgradeSystem.neuronProliferationUpgrades = data.proliferationUpgrades;
             ProjectSystem.loadFromSave(data.purchasedProjects);
