@@ -71,6 +71,11 @@ body {
     align-items: center;
     gap: 15px; /* Space between stat items */
 }
+.save-load-controls {
+    margin-left: auto;
+    display: flex;
+    gap: 10px;
+}
 .neuron-control {
     display: flex;
     align-items: center;

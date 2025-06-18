@@ -110,6 +110,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const brainPopupDOM = document.getElementById('brain-popup');
     const closeBrainPopupBtnDOM = document.getElementById('close-brain-popup');
     const brainStatsChartDOM = document.getElementById('brain-stats-chart');
+    const manualSaveBtnDOM = document.getElementById('manual-save');
+    const manualLoadBtnDOM = document.getElementById('manual-load');
 
     const brainStatsData = { labels: [], neurons: [], fuel: [] };
     let brainChart = null;
@@ -402,6 +404,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
         if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyProliferationFactory);
         if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
+        if (manualSaveBtnDOM) manualSaveBtnDOM.addEventListener('click', saveGame);
+        if (manualLoadBtnDOM) manualLoadBtnDOM.addEventListener('click', () => {
+            loadGame();
+            UIManager.updateAllDisplays();
+        });
         const threeContainerDOM = document.getElementById('threejs-canvas-container');
         if (threeContainerDOM) threeContainerDOM.addEventListener('click', openBrainPopup);
         if (closeBrainPopupBtnDOM) closeBrainPopupBtnDOM.addEventListener('click', closeBrainPopup);
