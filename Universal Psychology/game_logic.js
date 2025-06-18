@@ -112,6 +112,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const brainStatsChartDOM = document.getElementById('brain-stats-chart');
     const manualSaveBtnDOM = document.getElementById('manual-save');
     const manualLoadBtnDOM = document.getElementById('manual-load');
+    const newGameBtnDOM = document.getElementById('new-game');
+    const saveSlotSelectDOM = document.getElementById('save-slot-select');
+
+    let currentSaveSlot = 1;
 
     const brainStatsData = { labels: [], neurons: [], fuel: [] };
     let brainChart = null;
@@ -346,18 +350,46 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(brainPopupDOM) brainPopupDOM.style.display = 'none';
     }
 
-    function saveGame() {
+    function saveGame(slot = currentSaveSlot) {
         const save = {
             gameState,
             coreUpgrades: UpgradeSystem.coreUpgrades,
             proliferationUpgrades: UpgradeSystem.neuronProliferationUpgrades,
             purchasedProjects: gameState.purchasedProjects
         };
-        localStorage.setItem('up_save', JSON.stringify(save));
+        localStorage.setItem(`up_save_${slot}`, JSON.stringify(save));
     }
 
-    function loadGame() {
-        const raw = localStorage.getItem('up_save');
+    function applyLoadedUpgradeEffects() {
+        QuestionSystem.setOverallUnlockState(gameState.questionsActuallyUnlocked);
+        UpgradeSystem.coreUpgrades.forEach(upg => {
+            if(!upg.effectApplied) return;
+            if(upg.id === 'biggerBrain1') {
+                if(neuronProliferationAreaDOM) neuronProliferationAreaDOM.style.display = 'block';
+                QuestionSystem.unlockDifficultyLevel(0);
+            } else if(upg.id === 'biggerBrain2') {
+                if(hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block';
+                QuestionSystem.unlockDifficultyLevel(1);
+            } else if(upg.id === 'biggerBrain3') {
+                QuestionSystem.unlockDifficultyLevel(2);
+            } else if(upg.id === 'amygdalaActivation') {
+                if(!AnxietySystem.isAmygdalaFunctioning()) AnxietySystem.activateAmygdala();
+            }
+        });
+        UpgradeSystem.neuronProliferationUpgrades.forEach(upg => {
+            if(!upg.effectApplied) return;
+            if(upg.id === 'prolifFactory') {
+                if(factoryAreaDOM) factoryAreaDOM.style.display = 'block';
+            }
+        });
+        UIManager.updateQuestionAreaUIVisibility();
+        UpgradeSystem.renderCoreUpgrades();
+        UpgradeSystem.renderNeuronProliferationUpgrades();
+        UIManager.updateFactoryDisplay();
+    }
+
+    function loadGame(slot = currentSaveSlot) {
+        const raw = localStorage.getItem(`up_save_${slot}`);
         if(!raw) return;
         try {
             const data = JSON.parse(raw);
@@ -365,11 +397,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(Array.isArray(data.coreUpgrades)) UpgradeSystem.coreUpgrades = data.coreUpgrades;
             if(Array.isArray(data.proliferationUpgrades)) UpgradeSystem.neuronProliferationUpgrades = data.proliferationUpgrades;
             ProjectSystem.loadFromSave(data.purchasedProjects);
+            applyLoadedUpgradeEffects();
         } catch(e) { console.error('Load failed', e); }
     }
 
-    function resetGame() {
-        localStorage.removeItem('up_save');
+    function resetGame(slot = currentSaveSlot) {
+        localStorage.removeItem(`up_save_${slot}`);
         location.reload();
     }
 
@@ -416,11 +449,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
         if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyProliferationFactory);
         if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.addEventListener('click', handleBuyNeurofuel);
-        if (manualSaveBtnDOM) manualSaveBtnDOM.addEventListener('click', saveGame);
+        if (saveSlotSelectDOM) {
+            currentSaveSlot = parseInt(saveSlotSelectDOM.value) || 1;
+            saveSlotSelectDOM.addEventListener('change', () => {
+                currentSaveSlot = parseInt(saveSlotSelectDOM.value) || 1;
+            });
+        }
+        if (manualSaveBtnDOM) manualSaveBtnDOM.addEventListener('click', () => saveGame(currentSaveSlot));
         if (manualLoadBtnDOM) manualLoadBtnDOM.addEventListener('click', () => {
-            loadGame();
+            loadGame(currentSaveSlot);
             UIManager.updateAllDisplays();
         });
+        if (newGameBtnDOM) newGameBtnDOM.addEventListener('click', () => resetGame(currentSaveSlot));
         const threeContainerDOM = document.getElementById('threejs-canvas-container');
         if (threeContainerDOM) threeContainerDOM.addEventListener('click', openBrainPopup);
         if (closeBrainPopupBtnDOM) closeBrainPopupBtnDOM.addEventListener('click', closeBrainPopup);
@@ -452,9 +492,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UpgradeSystem.init(coreUpgrades_raw_data, neuronProliferationUpgrades_raw_data);
         ProjectSystem.init(projectData);
         AnxietySystem.init();
-        loadGame();
-        gameState.questionsActuallyUnlocked = false;
-        UIManager.updateQuestionAreaUIVisibility();
+        loadGame(currentSaveSlot);
         UpgradeSystem.renderCoreUpgrades();
         UpgradeSystem.renderNeuronProliferationUpgrades();
         attachEventListeners();
@@ -463,7 +501,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.updateAllDisplays();
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
         setInterval(gameLoop, 1000);
-        setInterval(saveGame, AUTO_SAVE_INTERVAL);
+        setInterval(() => saveGame(currentSaveSlot), AUTO_SAVE_INTERVAL);
     }
 
     // Expose limited API for external modules like minigames
