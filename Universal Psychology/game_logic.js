@@ -75,7 +75,6 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ANXIETY_THRESHOLD = 70; const ANXIETY_SUSTAINED_THRESHOLD = 60; const ANXIETY_TIME_LIMIT = 20; const MAX_ANXIETY = 100;
     const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20; const FACTORY_PRODUCTION_RATE = 0.5;
     const OPS_PER_NEURON = 0.01; const AUTO_SAVE_INTERVAL = 10000;
-    const QUESTION_RELOAD_DELAY_MS = 0; // time before next question loads
     const FOOD_OPTIONS = [
         {emoji: '🍌', name: 'Banana', fuel: 10},
         {emoji: '🥪', name: 'Sandwich', fuel: 20},
@@ -183,7 +182,25 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(factoryCostDOM) factoryCostDOM.textContent = Math.ceil(gameState.factoryCost);
             if(buyFactoryBtnDOM) buyFactoryBtnDOM.disabled = gameState.psychbucks < gameState.factoryCost;
         },
-        updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;}
+        updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;},
+        playBrainUpgradeAnimation(imgSrc="images/brain-upgrade.png"){
+            const overlay=document.getElementById("upgrade-animation-overlay");
+            if(!overlay) return;
+            overlay.innerHTML="";
+            const img=document.createElement("img");
+            img.className="upgrade-spin-image";
+            img.src=imgSrc;
+            overlay.appendChild(img);
+            for(let i=0;i<30;i++){
+                const p=document.createElement("div");
+                p.className="upgrade-particle";
+                overlay.appendChild(p);
+                const dx=(Math.random()-0.5)*300;
+                const dy=(Math.random()-0.5)*300;
+                requestAnimationFrame(()=>{p.style.transform=`translate(${dx}px, ${dy}px)`;p.style.opacity="0";});
+            }
+            setTimeout(()=>{overlay.innerHTML="";},1500);
+        },
     };
 
     // --- 6. QUESTION SYSTEM MODULE OBJECT ---
@@ -235,7 +252,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     AnxietySystem.increaseMeter(anxietyIncrease);
                 }
             }
-            this.currentQuestionIndex = -1; setTimeout(() => { this.loadNextQuestion(); UIManager.updateAllDisplays(); }, QUESTION_RELOAD_DELAY_MS);
+            this.currentQuestionIndex = -1; setTimeout(() => { this.loadNextQuestion(); UIManager.updateAllDisplays(); }, 1800);
         }
     };
 
@@ -282,6 +299,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const origUpgData=(upgradeType==="core"?coreUpgrades_raw_data:neuronProliferationUpgrades_raw_data).find(u=>u.id===upgradeId);
                 if(origUpgData&&typeof origUpgData.action==='function'){origUpgData.action();}
                 UIManager.logMessage(`Upgrade: ${upg.name} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
+                if(upg.type=="brain") UIManager.playBrainUpgradeAnimation();
                 if(upgradeType==="core")this.renderCoreUpgrades();else this.renderNeuronProliferationUpgrades();
             } else { UIManager.logMessage(`Not enough for ${upg.name}.`, "log-warning"); }
         },

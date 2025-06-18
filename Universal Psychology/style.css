@@ -451,3 +451,45 @@ button:hover {
 }
 
 
+
+/* Upgrade Animation Overlay */
+#upgrade-animation-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    pointer-events: none;
+    overflow: visible;
+    z-index: 1400;
+}
+
+#upgrade-animation-overlay .upgrade-spin-image {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%) scale(0.5);
+    width: 200px;
+    height: auto;
+    animation: upgrade-spin-fade 1.5s ease-out forwards;
+}
+
+@keyframes upgrade-spin-fade {
+    to {
+        transform: translate(-50%, -50%) scale(2) rotate(360deg);
+        opacity: 0;
+    }
+}
+
+#upgrade-animation-overlay .upgrade-particle {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 8px;
+    height: 8px;
+    background-color: gold;
+    border-radius: 50%;
+    opacity: 1;
+    transform: translate(0, 0) scale(1);
+    transition: transform 1s ease-out, opacity 1s ease-out;
+}
