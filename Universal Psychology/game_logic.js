@@ -74,7 +74,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 2. CONSTANTS ---
     const ANXIETY_THRESHOLD = 70; const ANXIETY_SUSTAINED_THRESHOLD = 60; const ANXIETY_TIME_LIMIT = 20; const MAX_ANXIETY = 100;
     const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20; const FACTORY_PRODUCTION_RATE = 0.5;
-    const OPS_PER_NEURON = 0.01; const AUTO_SAVE_INTERVAL = 10000;
+    const OPS_PER_NEURON = 0.01; const AUTO_SAVE_INTERVAL = 10000; const QUESTION_RELOAD_DELAY_MS = 0;
     const FOOD_OPTIONS = [
         {emoji: '🍌', name: 'Banana', fuel: 10},
         {emoji: '🥪', name: 'Sandwich', fuel: 20},
@@ -256,7 +256,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                     AnxietySystem.increaseMeter(anxietyIncrease);
                 }
             }
-            this.currentQuestionIndex = -1; setTimeout(() => { this.loadNextQuestion(); UIManager.updateAllDisplays(); }, 1800);
+            this.currentQuestionIndex = -1; setTimeout(() => { this.loadNextQuestion(); UIManager.updateAllDisplays(); }, QUESTION_RELOAD_DELAY_MS);
         }
     };
 
