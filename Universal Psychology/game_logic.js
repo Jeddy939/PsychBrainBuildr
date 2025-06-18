@@ -65,13 +65,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const ANXIETY_THRESHOLD = 70; const ANXIETY_SUSTAINED_THRESHOLD = 60; const ANXIETY_TIME_LIMIT = 20; const MAX_ANXIETY = 100;
     const SCARY_STIMULI_INTERVAL_MS = 120000; const BASE_IQ = 80; const IQ_SCALE_FACTOR = 15; const MAX_LOG_MESSAGES = 20; const FACTORY_PRODUCTION_RATE = 0.5;
     const OPS_PER_NEURON = 0.01; const AUTO_SAVE_INTERVAL = 10000;
-    const NEUROFUEL_PURCHASE_AMOUNT = 10;
     const FOOD_OPTIONS = [
-        {emoji: '🍌', name: 'Banana'},
-        {emoji: '🥪', name: 'Sandwich'},
-        {emoji: '🍎', name: 'Apple'},
-        {emoji: '🍪', name: 'Cookie'},
-        {emoji: '🍕', name: 'Pizza slice'}
+        {emoji: '🍌', name: 'Banana', fuel: 10},
+        {emoji: '🥪', name: 'Sandwich', fuel: 20},
+        {emoji: '🍎', name: 'Apple', fuel: 15},
+        {emoji: '🍪', name: 'Cookie', fuel: 25},
+        {emoji: '🍕', name: 'Pizza slice', fuel: 30},
+        {emoji: '🍰', name: 'Cake', fuel: 50}
     ];
 
     // --- 3. DOM ELEMENTS ---
@@ -297,9 +297,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleBuyNeurofuel(){
         if(gameState.psychbucks >= gameState.neuroFuelCost){
             gameState.psychbucks -= gameState.neuroFuelCost;
-            gameState.neuroFuel += NEUROFUEL_PURCHASE_AMOUNT;
             const item = FOOD_OPTIONS[Math.floor(Math.random()*FOOD_OPTIONS.length)];
-            UIManager.logMessage(`Purchased ${item.emoji} ${item.name}!`, 'log-upgrade');
+            gameState.neuroFuel += item.fuel;
+            UIManager.logMessage(`Purchased ${item.emoji} ${item.name}! (+${item.fuel} Fuel)`, 'log-upgrade');
             gameState.neuroFuelCost *= 1.05;
         } else {
             UIManager.logMessage('Not enough Psychbucks for food.', 'log-warning');
