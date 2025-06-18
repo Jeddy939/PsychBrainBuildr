@@ -1,4 +1,3 @@
 # Ignore build artifacts
-Universal Psychology/pokies-react/
 node_modules/
 dist/

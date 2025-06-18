@@ -204,32 +204,6 @@ section h2 {
     background-color: #5a6268;
 }
 
-/* Debug Controls Section */
-#debug-controls {
-    background-color: #fff0f0;
-    border: 1px dashed #d9534f;
-}
-#debug-controls h2 {
-    color: #d9534f;
-    font-size: 1.1em; 
-}
-#debug-controls button { 
-    font-size: 0.9em;
-    padding: 8px 12px;
-    margin-right: 10px;
-    border-radius: 3px;
-    color: white;
-    border: none;
-}
-#debug-add-neurons { background-color: #5cb85c; }
-#debug-add-psychbucks { background-color: #f0ad4e; }
-#debug-reset-game { background-color: #d9534f; }
-#debug-controls p {
-    font-size: 0.8em;
-    color: #777;
-    margin-top: 10px;
-    margin-bottom: 0;
-}
 
 /* Upgrade Items */
 .upgrade-item {
@@ -463,11 +437,4 @@ button:hover {
     margin-bottom: 10px;
 }
 
-/* Pokies Minigame */
-#pokies-area { text-align: center; }
-#pokies-react-container {
-    width: 100%;
-    height: 300px;
-    margin-bottom: 10px;
-}
 

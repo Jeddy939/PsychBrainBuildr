@@ -29,26 +29,3 @@ python3 -m http.server
 
 Navigate to `index2.html` (or `index (1).html`) in your browser.
 
-## Pokies React Demo
-
-`pokies-react` is a small React + Three.js demo of a 3D slot machine used inside *Universal Psychology*.
-
-**Development**
-
-```bash
-cd pokies-react
-npm install
-npm run dev
-```
-
-A Vite dev server will start.
-
-**Building**
-
-```bash
-npm run build
-```
-The build command automatically runs a `postbuild` script that copies the contents
-of `pokies-react/dist/` into `Universal Psychology/pokies-react/` using Node's
-filesystem API. This ensures the latest assets are available to the main game.
-
