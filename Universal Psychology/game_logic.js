@@ -199,7 +199,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const dy=(Math.random()-0.5)*300;
                 requestAnimationFrame(()=>{p.style.transform=`translate(${dx}px, ${dy}px)`;p.style.opacity="0";});
             }
-            setTimeout(()=>{overlay.innerHTML="";},1500);
+            setTimeout(()=>{overlay.innerHTML="";},2000);
         },
     };
 
