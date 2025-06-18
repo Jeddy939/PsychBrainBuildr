@@ -3,7 +3,7 @@
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. GAME STATE OBJECT ---
     const gameState = {
-        neurons: 0,
+        neurons: 50,
         psychbucks: 50,
         neuronsPerClick: 1,
         currentBrainLevel: 0,
@@ -555,6 +555,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.updateFactoryDisplay();
         UIManager.updateNeuroFuelDisplay();
         UIManager.updateAllDisplays();
+        if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'flex';
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
         setInterval(gameLoop, 1000);
         setInterval(() => saveGame(currentSaveSlot), AUTO_SAVE_INTERVAL);
