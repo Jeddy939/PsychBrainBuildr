@@ -56,6 +56,11 @@
                     <div id="feedback-area"></div>
                 </section>
 
+                <section id="minigames-area">
+                    <h2>NeuroGames</h2>
+                    <button id="open-neurosnake">Play NeuroSnake</button>
+                </section>
+
             </aside>
 
             <main class="right-column">
@@ -131,6 +136,14 @@
             </div>
         </div>
 
+    <!-- NeuroSnake Popup -->
+        <div id="neurosnake-popup" class="popup-overlay">
+            <div id="neurosnake-content">
+                <canvas id="neurosnake-canvas" width="400" height="400"></canvas>
+                <button id="close-neurosnake">Close</button>
+            </div>
+        </div>
+
     <!-- Instructions Overlay -->
         <div id="instructions-overlay">
             <div id="instructions-content">
@@ -150,5 +163,6 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script type="module" src="three_scene.js"></script>
     <script type="module" src="game_logic.js"></script>
+    <script type="module" src="neurosnake.js"></script>
 </body>
 </html>
