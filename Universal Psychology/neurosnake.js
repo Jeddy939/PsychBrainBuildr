@@ -1,13 +1,19 @@
-// neurosnake.js - simple snake variant rewarding Psychbucks
+// neurosnake.js - enhanced snake variant rewarding Psychbucks
 
-const cellSize = 20;
-const gridCount = 20;
+// Larger grid and cells for more detailed neuron graphics
+const cellSize = 30;
+const gridCount = 25;
+
 let canvas, ctx, scoreDisplay, instructionDisplay;
-let snake, direction, food, score, intervalId, isPlaying = false, speed = 100, blocksEaten = 0, rewardValue = 2;
+let snake, direction, food, score, intervalId, isPlaying = false,
+    speed = 100, blocksEaten = 0, rewardValue = 2, frame = 0;
 
 function initElements(){
     canvas = document.getElementById('neurosnake-canvas');
     ctx = canvas.getContext('2d');
+    // ensure canvas matches configured grid size
+    canvas.width = cellSize * gridCount;
+    canvas.height = cellSize * gridCount;
     scoreDisplay = document.getElementById('neurosnake-score');
     instructionDisplay = document.getElementById('neurosnake-instruction');
     const openBtn = document.getElementById('open-neurosnake');
@@ -41,12 +47,11 @@ function startGame(){
 
 function stopGame(){
     isPlaying = false;
-    if(intervalId){ clearInterval(intervalId); intervalId = null; }
-function stopGame(){
-    isPlaying = false;
-    if(intervalId){ clearInterval(intervalId); intervalId = null; }
+    if(intervalId){
+        clearInterval(intervalId);
+        intervalId = null;
+    }
     if(instructionDisplay) instructionDisplay.textContent = '';
-}
 }
 
 function spawnFood(){
@@ -109,11 +114,69 @@ function gameLoop(){
 
 function draw(){
     ctx.fillStyle = '#000';
-    ctx.fillRect(0,0,canvas.width, canvas.height);
-    ctx.fillStyle = 'lime';
-    snake.forEach(seg => ctx.fillRect(seg.x*cellSize, seg.y*cellSize, cellSize-1, cellSize-1));
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    // precompute wiggle positions
+    const positions = snake.map((seg, i) => getWigglePosition(seg, i));
+
+    // draw electrical connections between neurons
+    ctx.lineWidth = 2;
+    ctx.strokeStyle = '#0ff';
+const CONNECTION_DASH = [6, 4];
+ctx.setLineDash(CONNECTION_DASH);
+    ctx.lineDashOffset = -frame * 2;
+    ctx.beginPath();
+    for(let i=0;i<positions.length-1;i++){
+        const a = positions[i];
+        const b = positions[i+1];
+        ctx.moveTo(a.x, a.y);
+        ctx.lineTo(b.x, b.y);
+    }
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // draw neuron bodies
+    positions.forEach(pos => drawNeuron(pos.x, pos.y));
+
+    // draw food as a bright neuron
+    drawFood();
+
+    frame++;
+}
+
+function getWigglePosition(seg, index){
+    const prev = snake[index-1] || seg;
+    const next = snake[index+1] || seg;
+    const dx = next.x - prev.x;
+    const dy = next.y - prev.y;
+    const len = Math.hypot(dx, dy) || 1;
+    const nx = -dy / len;
+    const ny = dx / len;
+    const offset = Math.sin(frame * 0.3 + index) * 3;
+    return {
+        x: seg.x * cellSize + cellSize/2 + nx * offset,
+        y: seg.y * cellSize + cellSize/2 + ny * offset
+    };
+}
+
+function drawNeuron(x, y){
+    const r = cellSize * 0.4;
+    const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r);
+    g.addColorStop(0, '#ffffcc');
+    g.addColorStop(1, '#ff8800');
+    ctx.fillStyle = g;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI*2);
+    ctx.fill();
+}
+
+function drawFood(){
+    const x = food.x * cellSize + cellSize/2;
+    const y = food.y * cellSize + cellSize/2;
     ctx.fillStyle = 'red';
-    ctx.fillRect(food.x*cellSize, food.y*cellSize, cellSize-1, cellSize-1);
+    ctx.beginPath();
+    ctx.arc(x, y, cellSize*0.3, 0, Math.PI*2);
+    ctx.fill();
 }
 
 function adjustSpeed(){
