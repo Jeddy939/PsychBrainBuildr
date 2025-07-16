@@ -2,12 +2,14 @@
 
 const cellSize = 20;
 const gridCount = 20;
-let canvas, ctx;
-let snake, direction, food, score, intervalId, isPlaying = false;
+let canvas, ctx, scoreDisplay, instructionDisplay;
+let snake, direction, food, score, intervalId, isPlaying = false, speed = 100, blocksEaten = 0;
 
 function initElements(){
     canvas = document.getElementById('neurosnake-canvas');
     ctx = canvas.getContext('2d');
+    scoreDisplay = document.getElementById('neurosnake-score');
+    instructionDisplay = document.getElementById('neurosnake-instruction');
     const openBtn = document.getElementById('open-neurosnake');
     const closeBtn = document.getElementById('close-neurosnake');
     const popup = document.getElementById('neurosnake-popup');
@@ -27,15 +29,20 @@ function startGame(){
     direction = {x:1, y:0};
     food = spawnFood();
     score = 0;
-    isPlaying = true;
-    if(intervalId) clearInterval(intervalId);
-    intervalId = setInterval(gameLoop, 100);
+    blocksEaten = 0;
+    speed = 100;
+    isPlaying = false;
+    if(intervalId){ clearInterval(intervalId); intervalId = null; }
+    if(scoreDisplay) scoreDisplay.textContent = 'Psychbucks: 0';
+    if(instructionDisplay) instructionDisplay.textContent = 'Press an arrow key to start';
     draw();
 }
 
 function stopGame(){
     isPlaying = false;
     if(intervalId){ clearInterval(intervalId); intervalId = null; }
+    if(instructionDisplay) instructionDisplay.textContent = '';
+    if(scoreDisplay) scoreDisplay.textContent = 'Psychbucks: 0';
 }
 
 function spawnFood(){
@@ -47,13 +54,25 @@ function spawnFood(){
 }
 
 function handleKey(e){
-    if(!isPlaying) return;
-    switch(e.key){
-        case 'ArrowUp': if(direction.y!==1) direction = {x:0,y:-1}; break;
-        case 'ArrowDown': if(direction.y!==-1) direction = {x:0,y:1}; break;
-        case 'ArrowLeft': if(direction.x!==1) direction = {x:-1,y:0}; break;
-        case 'ArrowRight': if(direction.x!==-1) direction = {x:1,y:0}; break;
-        default: return;
+    if(!isPlaying){
+        switch(e.key){
+            case 'ArrowUp': direction = {x:0,y:-1}; break;
+            case 'ArrowDown': direction = {x:0,y:1}; break;
+            case 'ArrowLeft': direction = {x:-1,y:0}; break;
+            case 'ArrowRight': direction = {x:1,y:0}; break;
+            default: return;
+        }
+        isPlaying = true;
+        if(instructionDisplay) instructionDisplay.textContent = '';
+        intervalId = setInterval(gameLoop, speed);
+    } else {
+        switch(e.key){
+            case 'ArrowUp': if(direction.y!==1) direction = {x:0,y:-1}; break;
+            case 'ArrowDown': if(direction.y!==-1) direction = {x:0,y:1}; break;
+            case 'ArrowLeft': if(direction.x!==1) direction = {x:-1,y:0}; break;
+            case 'ArrowRight': if(direction.x!==-1) direction = {x:1,y:0}; break;
+            default: return;
+        }
     }
     e.preventDefault();
 }
@@ -66,7 +85,11 @@ function gameLoop(){
     }
     snake.unshift(head);
     if(head.x===food.x && head.y===food.y){
-        score += 1;
+        const reward = 2 ** blocksEaten;
+        score += reward;
+        blocksEaten++;
+        if(scoreDisplay) scoreDisplay.textContent = `Psychbucks: ${score}`;
+        adjustSpeed();
         food = spawnFood();
     } else {
         snake.pop();
@@ -83,6 +106,17 @@ function draw(){
     ctx.fillRect(food.x*cellSize, food.y*cellSize, cellSize-1, cellSize-1);
 }
 
+function adjustSpeed(){
+    let newSpeed = speed;
+    if(score >= 1024) newSpeed = 50;
+    else if(score >= 128) newSpeed = 75;
+    if(newSpeed !== speed){
+        speed = newSpeed;
+        clearInterval(intervalId);
+        intervalId = setInterval(gameLoop, speed);
+    }
+}
+
 function endGame(){
     stopGame();
     const api = window.GameAPI;
@@ -92,6 +126,7 @@ function endGame(){
         api.updateDisplays();
         api.logMessage(`NeuroSnake finished: +${score} Psychbucks!`, 'log-info');
     }
+    if(instructionDisplay) instructionDisplay.textContent = 'Game over';
 }
 
 document.addEventListener('DOMContentLoaded', initElements);
