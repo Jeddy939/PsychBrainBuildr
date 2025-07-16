@@ -472,6 +472,16 @@ button:hover {
     padding: 20px;
     border-radius: 8px;
 }
+#neurosnake-score {
+    text-align: center;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+#neurosnake-instruction {
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 10px;
+}
 #neurosnake-canvas {
     background: #000;
     display: block;
