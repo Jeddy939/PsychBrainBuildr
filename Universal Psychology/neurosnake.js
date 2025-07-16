@@ -122,7 +122,8 @@ function draw(){
     // draw electrical connections between neurons
     ctx.lineWidth = 2;
     ctx.strokeStyle = '#0ff';
-    ctx.setLineDash([6,4]);
+const CONNECTION_DASH = [6, 4];
+ctx.setLineDash(CONNECTION_DASH);
     ctx.lineDashOffset = -frame * 2;
     ctx.beginPath();
     for(let i=0;i<positions.length-1;i++){
