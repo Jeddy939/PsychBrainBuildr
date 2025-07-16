@@ -3,7 +3,7 @@
 const cellSize = 20;
 const gridCount = 20;
 let canvas, ctx, scoreDisplay, instructionDisplay;
-let snake, direction, food, score, intervalId, isPlaying = false, speed = 100, blocksEaten = 0;
+let snake, direction, food, score, intervalId, isPlaying = false, speed = 100, blocksEaten = 0, rewardValue = 2;
 
 function initElements(){
     canvas = document.getElementById('neurosnake-canvas');
@@ -30,6 +30,7 @@ function startGame(){
     food = spawnFood();
     score = 0;
     blocksEaten = 0;
+    rewardValue = 2;
     speed = 100;
     isPlaying = false;
     if(intervalId){ clearInterval(intervalId); intervalId = null; }
@@ -81,17 +82,23 @@ function handleKey(e){
 }
 
 function gameLoop(){
-    const head = {x: snake[0].x + direction.x, y: snake[0].y + direction.y};
-    if(head.x<0 || head.x>=gridCount || head.y<0 || head.y>=gridCount || snake.some(s => s.x===head.x && s.y===head.y)){
+    let nextX = snake[0].x + direction.x;
+    let nextY = snake[0].y + direction.y;
+    if(nextX < 0) nextX = gridCount - 1;
+    else if(nextX >= gridCount) nextX = 0;
+    if(nextY < 0) nextY = gridCount - 1;
+    else if(nextY >= gridCount) nextY = 0;
+    const head = {x: nextX, y: nextY};
+    if(snake.some(s => s.x===head.x && s.y===head.y)){
         endGame();
         return;
     }
     snake.unshift(head);
     if(head.x===food.x && head.y===food.y){
-        const reward = 2 ** blocksEaten;
-        score += reward;
+        score += rewardValue;
         blocksEaten++;
-        if(scoreDisplay) scoreDisplay.textContent = `Psychbucks: ${score}`;
+        rewardValue *= 1.5;
+        if(scoreDisplay) scoreDisplay.textContent = `Psychbucks: ${Math.floor(score)}`;
         adjustSpeed();
         food = spawnFood();
     } else {
