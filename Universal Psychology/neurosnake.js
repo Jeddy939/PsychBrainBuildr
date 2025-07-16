@@ -8,11 +8,13 @@ let canvas, ctx, scoreDisplay, instructionDisplay;
 let snake, direction, food, score, intervalId, isPlaying = false,
     speed = 100, blocksEaten = 0, rewardValue = 2, frame = 0;
 
-function resizeCanvas(){
+function resizeCanvas() {
     const size = Math.min(window.innerWidth, window.innerHeight) * 0.8;
     canvas.width = size;
     canvas.height = size;
     cellSize = canvas.width / gridCount;
+    draw(); // Redraw immediately
+}
 }
 
 function initElements(){
