@@ -486,6 +486,10 @@ button:hover {
     background: #000;
     display: block;
     margin-bottom: 10px;
+    width: 80vmin;
+    height: 80vmin;
+    max-width: 100%;
+    max-height: 80vh;
 }
 
 

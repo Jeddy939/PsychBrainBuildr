@@ -1,19 +1,26 @@
 // neurosnake.js - enhanced snake variant rewarding Psychbucks
 
-// Larger grid and cells for more detailed neuron graphics
-const cellSize = 30;
+// Grid size and cell dimension will be adjusted dynamically
+let cellSize = 30;
 const gridCount = 25;
 
 let canvas, ctx, scoreDisplay, instructionDisplay;
 let snake, direction, food, score, intervalId, isPlaying = false,
     speed = 100, blocksEaten = 0, rewardValue = 2, frame = 0;
 
+function resizeCanvas() {
+    const size = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+    canvas.width = size;
+    canvas.height = size;
+    cellSize = canvas.width / gridCount;
+    draw(); // Redraw immediately
+}
+}
+
 function initElements(){
     canvas = document.getElementById('neurosnake-canvas');
     ctx = canvas.getContext('2d');
-    // ensure canvas matches configured grid size
-    canvas.width = cellSize * gridCount;
-    canvas.height = cellSize * gridCount;
+    resizeCanvas();
     scoreDisplay = document.getElementById('neurosnake-score');
     instructionDisplay = document.getElementById('neurosnake-instruction');
     const openBtn = document.getElementById('open-neurosnake');
@@ -21,6 +28,7 @@ function initElements(){
     const popup = document.getElementById('neurosnake-popup');
     if(openBtn) openBtn.addEventListener('click', () => {
         popup.style.display = 'flex';
+        resizeCanvas();
         startGame();
     });
     if(closeBtn) closeBtn.addEventListener('click', () => {
@@ -28,6 +36,7 @@ function initElements(){
         stopGame();
     });
     document.addEventListener('keydown', handleKey);
+    window.addEventListener('resize', resizeCanvas);
 }
 
 function startGame(){
@@ -135,8 +144,8 @@ ctx.setLineDash(CONNECTION_DASH);
     ctx.stroke();
     ctx.setLineDash([]);
 
-    // draw neuron bodies
-    positions.forEach(pos => drawNeuron(pos.x, pos.y));
+    // draw neuron bodies with dendrites and axons
+    positions.forEach((pos, idx) => drawNeuron(pos.x, pos.y, idx, positions));
 
     // draw food as a bright neuron
     drawFood();
@@ -159,8 +168,10 @@ function getWigglePosition(seg, index){
     };
 }
 
-function drawNeuron(x, y){
+function drawNeuron(x, y, index, positions){
     const r = cellSize * 0.4;
+
+    // neuron body
     const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r);
     g.addColorStop(0, '#ffffcc');
     g.addColorStop(1, '#ff8800');
@@ -168,6 +179,45 @@ function drawNeuron(x, y){
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI*2);
     ctx.fill();
+
+    // dendrites
+    ctx.strokeStyle = '#ffcc66';
+    ctx.lineWidth = 1;
+    const branches = 6;
+    for(let i=0;i<branches;i++){
+        const angle = (i/branches) * Math.PI*2 + frame*0.05;
+        ctx.beginPath();
+        ctx.moveTo(x + Math.cos(angle)*r, y + Math.sin(angle)*r);
+        const segs = 3;
+        for(let j=1;j<=segs;j++){
+            const t = j/segs;
+            const len = r*1.5;
+            const off = Math.sin(frame*0.1 + index + i*j)*r*0.3;
+            const px = x + Math.cos(angle)*(r + len*t) + Math.cos(angle+Math.PI/2)*off;
+            const py = y + Math.sin(angle)*(r + len*t) + Math.sin(angle+Math.PI/2)*off;
+            ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+    }
+
+    // axon to next neuron
+    if(positions && index < positions.length-1){
+        const next = positions[index+1];
+        ctx.strokeStyle = '#ffaa00';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(x, y);
+        const dx = next.x - x;
+        const dy = next.y - y;
+        const segments = 4;
+        for(let j=1;j<=segments;j++){
+            const t = j/segments;
+            const px = x + dx*t + Math.sin(frame*0.2 + j*index)*3*(1-t);
+            const py = y + dy*t + Math.cos(frame*0.2 + j*index)*3*(1-t);
+            ctx.lineTo(px, py);
+        }
+        ctx.stroke();
+    }
 }
 
 function drawFood(){
