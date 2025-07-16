@@ -41,8 +41,11 @@ function startGame(){
 function stopGame(){
     isPlaying = false;
     if(intervalId){ clearInterval(intervalId); intervalId = null; }
+function stopGame(){
+    isPlaying = false;
+    if(intervalId){ clearInterval(intervalId); intervalId = null; }
     if(instructionDisplay) instructionDisplay.textContent = '';
-    if(scoreDisplay) scoreDisplay.textContent = 'Psychbucks: 0';
+}
 }
 
 function spawnFood(){
