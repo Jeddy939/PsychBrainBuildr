@@ -15,7 +15,6 @@ function resizeCanvas() {
     cellSize = canvas.width / gridCount;
     draw(); // Redraw immediately
 }
-}
 
 function initElements(){
     canvas = document.getElementById('neurosnake-canvas');
