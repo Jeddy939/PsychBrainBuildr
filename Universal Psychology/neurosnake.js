@@ -121,6 +121,8 @@ function gameLoop(){
 }
 
 function draw(){
+    // `resizeCanvas` may call draw before the snake is initialized.
+    if (!snake) return;
     ctx.fillStyle = '#000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
