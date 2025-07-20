@@ -6,7 +6,7 @@ const gridCount = 25;
 
 let canvas, ctx, scoreDisplay, instructionDisplay;
 let snake, direction, food, score, intervalId, isPlaying = false,
-    speed = 100, blocksEaten = 0, rewardValue = 2, frame = 0;
+    speed = 100, blocksEaten = 0, frame = 0;
 
 function resizeCanvas() {
     const size = Math.min(window.innerWidth, window.innerHeight) * 0.8;
@@ -44,7 +44,6 @@ function startGame(){
     food = spawnFood();
     score = 0;
     blocksEaten = 0;
-    rewardValue = 2;
     speed = 100;
     isPlaying = false;
     if(intervalId){ clearInterval(intervalId); intervalId = null; }
@@ -108,9 +107,9 @@ function gameLoop(){
     }
     snake.unshift(head);
     if(head.x===food.x && head.y===food.y){
-        score += rewardValue;
         blocksEaten++;
-        rewardValue *= 1.5;
+        const rewardPerNeuron = Math.floor((blocksEaten - 1) / 10) + 1;
+        score += rewardPerNeuron;
         if(scoreDisplay) scoreDisplay.textContent = `Psychbucks: ${Math.floor(score)}`;
         adjustSpeed();
         food = spawnFood();
@@ -231,9 +230,8 @@ function drawFood(){
 }
 
 function adjustSpeed(){
-    let newSpeed = speed;
-    if(score >= 1024) newSpeed = 50;
-    else if(score >= 128) newSpeed = 75;
+    const baseSpeed = 100;
+    let newSpeed = Math.max(50, baseSpeed - Math.floor(blocksEaten / 10) * 5);
     if(newSpeed !== speed){
         speed = newSpeed;
         clearInterval(intervalId);
