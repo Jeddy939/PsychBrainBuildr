@@ -231,7 +231,7 @@ function drawFood(){
 
 function adjustSpeed(){
     const baseSpeed = 100;
-    let newSpeed = Math.max(50, baseSpeed - Math.floor(blocksEaten / 10) * 5);
+    let newSpeed = Math.max(50, baseSpeed - Math.floor((blocksEaten - 1) / 10) * 5);
     if(newSpeed !== speed){
         speed = newSpeed;
         clearInterval(intervalId);
