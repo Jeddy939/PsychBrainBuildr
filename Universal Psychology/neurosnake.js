@@ -101,10 +101,6 @@ function gameLoop(){
     if(nextY < 0) nextY = gridCount - 1;
     else if(nextY >= gridCount) nextY = 0;
     const head = {x: nextX, y: nextY};
-    if(snake.some(s => s.x===head.x && s.y===head.y)){
-        endGame();
-        return;
-    }
     snake.unshift(head);
     if(head.x===food.x && head.y===food.y){
         blocksEaten++;
@@ -115,6 +111,12 @@ function gameLoop(){
         food = spawnFood();
     } else {
         snake.pop();
+    }
+    for(let i=1;i<snake.length;i++){
+        if(snake[i].x===head.x && snake[i].y===head.y){
+            endGame();
+            return;
+        }
     }
     draw();
 }
@@ -173,8 +175,13 @@ function drawNeuron(x, y, index, positions){
 
     // neuron body
     const g = ctx.createRadialGradient(x, y, r*0.2, x, y, r);
-    g.addColorStop(0, '#ffffcc');
-    g.addColorStop(1, '#ff8800');
+    if(index === 0){
+        g.addColorStop(0, '#ccffcc');
+        g.addColorStop(1, '#00aa00');
+    } else {
+        g.addColorStop(0, '#ffffcc');
+        g.addColorStop(1, '#ff8800');
+    }
     ctx.fillStyle = g;
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI*2);
