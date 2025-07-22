@@ -23,6 +23,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         // anxietyMeter, timeAtHighDopamine, isAnxietyAttackActive are now in AnxietySystem
         questionsActuallyUnlocked: false,
         // isAmygdalaActive is effectively AnxietySystem.isAmygdalaFunctioning()
+        unlockedGames: {
+            neurosnake: false,
+            brainTetris: false,
+            flappyFreud: false,
+            feedSundgren: false
+        }
     };
 
     function calculateNextNeuroFuelCost(){
@@ -124,6 +130,10 @@ document.addEventListener('DOMContentLoaded', async () => {
     const manualLoadBtnDOM = document.getElementById('manual-load');
     const newGameBtnDOM = document.getElementById('new-game');
     const saveSlotSelectDOM = document.getElementById('save-slot-select');
+    const openNeuroSnakeBtn = document.getElementById('open-neurosnake');
+    const openBrainTetrisBtn = document.getElementById('open-braintetris');
+    const openFlappyFreudBtn = document.getElementById('open-flappyfreud');
+    const openFeedSundgrenBtn = document.getElementById('open-feedsundgren');
 
     let currentSaveSlot = 1;
 
@@ -139,7 +149,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 50, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
         { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
         { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); startIrregularSnacks(); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
-        { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }}
+        { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }},
+        { id: "nucleusAccumbens", name: "Nucleus Accumbens", costCurrency: "neurons", cost: 2000, description: "Unlocks access to NeuroGames.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.unlockedGames.neurosnake = true; gameState.unlockedGames.brainTetris = true; gameState.unlockedGames.flappyFreud = true; gameState.unlockedGames.feedSundgren = true; UIManager.updateMinigameButtons(); UIManager.logMessage("Pleasure center engaged! Minigames available.", 'log-unlock'); }}
     ];
     const neuronProliferationUpgrades_raw_data = [
         { id: "prolifFactory", name: "Neuron Proliferation Factory", description: "Builds a facility for passive neuron growth (+0.5/sec).", costCurrency: "psychbucks", cost: 10, neuronBoost: 0.5, effectApplied: false, type: 'proliferation', action: () => { if(factoryAreaDOM) { factoryAreaDOM.style.display = 'block'; UIManager.updateFactoryDisplay(); } } },
@@ -173,7 +184,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         displayFeedback(msg,type){if(type==='correct'||type==='incorrect'){if(feedbackAreaDOM){feedbackAreaDOM.textContent=msg;feedbackAreaDOM.style.color=type==='correct'?'green':'red';}}else if(type==='streak-bonus'||type==='streak-broken'){if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent=msg;streakFeedbackAreaDOM.className=type==='streak-bonus'?'streak-bonus-text':'streak-broken-text';}}},
         clearFeedbackAreas() { if(feedbackAreaDOM)feedbackAreaDOM.textContent=''; if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent='';streakFeedbackAreaDOM.className='';}},
-        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateNeuroFuelDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();UpgradeSystem.updateUpgradeButtons();ProjectSystem.renderProjects();},
+        updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateNeuroFuelDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();this.updateMinigameButtons();UpgradeSystem.updateUpgradeButtons();ProjectSystem.renderProjects();},
         callUpdateBrainVisual() { if(window.GameVisuals && typeof window.GameVisuals.updateBrainVisual === 'function'){window.GameVisuals.updateBrainVisual({level:gameState.currentBrainLevel,dopamine:gameState.dopamineLevel,gaba:gameState.gabaLevel});}},
         renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${upg.name} ${sTxt}</h3><p>${upg.description}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${upg.name}</h3><p>${upg.description}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
         updateFactoryDisplay(){
@@ -181,6 +192,12 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(factoryCountDOM) factoryCountDOM.textContent = gameState.factoryCount;
             if(factoryCostDOM) factoryCostDOM.textContent = Math.ceil(gameState.factoryCost);
             if(buyFactoryBtnDOM) buyFactoryBtnDOM.disabled = gameState.psychbucks < gameState.factoryCost;
+        },
+        updateMinigameButtons(){
+            if(openNeuroSnakeBtn) openNeuroSnakeBtn.style.display = gameState.unlockedGames.neurosnake ? '' : 'none';
+            if(openBrainTetrisBtn) openBrainTetrisBtn.style.display = gameState.unlockedGames.brainTetris ? '' : 'none';
+            if(openFlappyFreudBtn) openFlappyFreudBtn.style.display = gameState.unlockedGames.flappyFreud ? '' : 'none';
+            if(openFeedSundgrenBtn) openFeedSundgrenBtn.style.display = gameState.unlockedGames.feedSundgren ? '' : 'none';
         },
         updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;},
         // Path to brain upgrade image is relative to index.html, which lives
@@ -439,6 +456,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 startIrregularSnacks();
             } else if(upg.id === 'amygdalaActivation') {
                 if(!AnxietySystem.isAmygdalaFunctioning()) AnxietySystem.activateAmygdala();
+            } else if(upg.id === 'nucleusAccumbens') {
+                gameState.unlockedGames.neurosnake = true;
+                gameState.unlockedGames.brainTetris = true;
+                gameState.unlockedGames.flappyFreud = true;
+                gameState.unlockedGames.feedSundgren = true;
             }
         });
         UpgradeSystem.neuronProliferationUpgrades.forEach(upg => {
@@ -453,6 +475,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UpgradeSystem.renderCoreUpgrades();
         UpgradeSystem.renderNeuronProliferationUpgrades();
         UIManager.updateFactoryDisplay();
+        UIManager.updateMinigameButtons();
         UIManager.callUpdateBrainVisual();
     }
 
