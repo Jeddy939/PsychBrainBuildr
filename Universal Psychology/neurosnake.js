@@ -29,12 +29,13 @@ function initElements(){
         popup.style.display = 'flex';
         resizeCanvas();
         startGame();
+        document.addEventListener('keydown', handleKey);
     });
     if(closeBtn) closeBtn.addEventListener('click', () => {
         popup.style.display = 'none';
         stopGame();
+        document.removeEventListener('keydown', handleKey);
     });
-    document.addEventListener('keydown', handleKey);
     window.addEventListener('resize', resizeCanvas);
 }
 
@@ -70,6 +71,8 @@ function spawnFood(){
 }
 
 function handleKey(e){
+    const popup = document.getElementById('neurosnake-popup');
+    if(!snake || (popup && popup.style.display === 'none')) return;
     if(!isPlaying){
         switch(e.key){
             case 'ArrowUp': direction = {x:0,y:-1}; break;
