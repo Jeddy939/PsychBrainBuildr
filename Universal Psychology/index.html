@@ -8,8 +8,8 @@
     <script type="importmap">
     {
         "imports": {
-            "three": "https://unpkg.com/three@0.153.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.153.0/examples/jsm/"
+            "three": "./lib/three/three.module.js",
+            "three/addons/": "./lib/three/addons/"
         }
     }
     </script>
@@ -166,7 +166,7 @@
         <button id="info-button">?</button>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="./lib/chart.4.5.0.min.js"></script>
     <script type="module" src="three_scene.js"></script>
     <script type="module" src="game_logic.js"></script>
     <script type="module" src="neurosnake.js"></script>
