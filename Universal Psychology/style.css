@@ -90,11 +90,10 @@ body {
     font-size: 1.1em;
     font-weight: bold;
 }
-#neurons-display { color: #555; }
-#psychbucks-display { color: #666; }
+/* Colors for stat displays */
+#neurons-display, #neurofuel-display { color: #555; }
+#psychbucks-display, #ops-display { color: #666; }
 #iq-display { color: #767676; }
-#ops-display { color: #666; }
-#neurofuel-display { color: #555; }
 
 /* Icons for stat labels to reduce reliance on color */
 #neurons-display::before { content: "🧠 "; }
