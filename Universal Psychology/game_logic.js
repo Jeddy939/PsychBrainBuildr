@@ -73,7 +73,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             const p = this.projects.find(pr => pr.id === id);
             if(!p || p.purchased || gameState.mindOps < p.cost) return;
             gameState.mindOps -= p.cost;
-            if(typeof p.effect === 'function') p.effect();
+            if(typeof p.effect === 'function') p.effect.call(p);
             p.purchased = true;
             gameState.purchasedProjects.push(id);
             UIManager.logMessage(`Project completed: ${p.title}`, 'log-upgrade');
@@ -82,7 +82,12 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         loadFromSave(saved){
             if(!saved) return;
-            this.projects.forEach(p => { if(saved.includes(p.id)) { p.purchased = true; } });
+            this.projects.forEach(p => {
+                if(saved.includes(p.id)) {
+                    p.purchased = true;
+                    if(typeof p.effect === 'function') p.effect.call(p);
+                }
+            });
         }
     };
 
@@ -177,8 +182,25 @@ document.addEventListener('DOMContentLoaded', async () => {
     ];
 
     const projectData = [
-        { id: 'efficiency', title: 'Neural Efficiency', description: 'Increase passive neuron production by 10%.', cost: 100, trigger: () => gameState.factoryCount >= 1, effect: () => { gameState.passiveNeuronsPerSecond *= 1.1; } },
-        { id: 'automation', title: 'Autonomy Research', description: 'Clicks automatically once per second.', cost: 250, trigger: () => gameState.currentBrainLevel >= 1, effect: () => { setInterval(handleManualGeneration, 1000); } }
+        {
+            id: 'efficiency',
+            title: 'Neural Efficiency',
+            description: 'Increase passive neuron production by 10%.',
+            cost: 100,
+            trigger: () => gameState.factoryCount >= 1,
+            effect: function(){ gameState.passiveNeuronsPerSecond *= 1.1; }
+        },
+        {
+            id: 'automation',
+            title: 'Autonomy Research',
+            description: 'Clicks automatically once per second.',
+            cost: 250,
+            trigger: () => gameState.currentBrainLevel >= 1,
+            effect: function(){
+                if(this.intervalId) return;
+                this.intervalId = setInterval(handleManualGeneration, 1000);
+            }
+        }
     ];
 
     // --- 5. UI MANAGER OBJECT ---
