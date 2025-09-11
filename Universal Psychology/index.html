@@ -47,8 +47,8 @@
         </header>
 
         <!-- Main Content Area with Two Columns -->
-        <div class="content-wrapper">
-            <aside class="left-column">
+        <div class="content-wrapper" style="display:none;">
+            <aside class="left-column" style="display:none;">
                 <section id="question-area">
                     <h2>Test Your Knowledge</h2>
                     <div id="question-text">Upgrade your brain to unlock psychology questions!</div>
@@ -67,7 +67,7 @@
             </aside>
 
             <main class="right-column">
-                <section id="brain-visual-area">
+                <section id="brain-visual-area" style="display:none;">
                     <div class="brain-viz-wrapper">
                         <h2>Your Brain</h2>
                         <div id="threejs-canvas-container"></div>
@@ -78,7 +78,7 @@
                 
                 <!-- Container for scrollable content below brain viz -->
                 <div class="right-column-lower-content">
-                    <section id="upgrades-area">
+                    <section id="upgrades-area" style="display:none;">
                         <h2>Core Upgrades</h2>
                         <div id="upgrades-list"></div>
                     </section>
@@ -95,14 +95,14 @@
                         <div id="neuron-proliferation-upgrades-list"></div>
                     </section>
 
-                    <section id="neurofuel-area">
+                    <section id="neurofuel-area" style="display:none;">
                         <h2>NeuroFuel</h2>
                         <p>Fuel: <span id="neurofuel-count">10</span></p>
                         <p>Cost: <span id="neurofuel-cost">1</span> Psychbucks</p>
                         <button id="buy-neurofuel-btn">Buy Food</button>
                     </section>
 
-                    <section id="projects-area">
+                    <section id="projects-area" style="display:none;">
                         <h2>Projects</h2>
                         <div id="projects-list"></div>
                     </section>
