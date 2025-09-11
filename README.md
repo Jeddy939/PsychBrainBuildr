@@ -29,5 +29,5 @@ cd "Universal Paperclips"
 python3 -m http.server
 ```
 
-Navigate to `index2.html` (or `index (1).html`) in your browser.
+Navigate to `index.html` in your browser.
 
