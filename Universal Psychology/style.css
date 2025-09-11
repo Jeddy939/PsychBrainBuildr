@@ -3,6 +3,15 @@
     box-sizing: border-box;
 }
 
+:root {
+    /* Muted blue/gray palette */
+    --primary-bg: #486795;
+    --primary-bg-hover: #375579;
+    --primary-bg-disabled: #9ba9b4;
+    --info-bg: #eef2f7;
+    --info-border: #cfd6e0;
+}
+
 html {
     height: 100%;
 }
@@ -36,8 +45,8 @@ body {
 
 /* Info Banner */
 #info-banner {
-    background-color: #e9f5ff;
-    border: 1px solid #bce8f1;
+    background-color: var(--info-bg);
+    border: 1px solid var(--info-border);
     border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 10px;
@@ -84,7 +93,7 @@ body {
 #click-button { /* General styling for this button is further down */
     padding: 5px 10px;
     font-size: 0.9em;
-    background-color: #28a745;
+    background-color: var(--primary-bg);
 }
 #neurons-display, #psychbucks-display, #iq-display, #ops-display, #neurofuel-display {
     font-size: 1.1em;
@@ -208,10 +217,11 @@ section h2 {
     display: block;
     width: 100%;
     margin-bottom: 8px;
-    background-color: #6c757d; 
+    background-color: var(--primary-bg);
 }
-#answer-options button:hover {
-    background-color: #5a6268;
+#answer-options button:hover,
+#answer-options button:focus {
+    background-color: var(--primary-bg-hover);
 }
 
 
@@ -236,13 +246,14 @@ section h2 {
 .upgrade-item button {
     font-size: 0.85em;
     padding: 4px 8px;
-    background-color: #28a745;
+    background-color: var(--primary-bg);
 }
-.upgrade-item button:hover {
-    background-color: #218838;
+.upgrade-item button:hover,
+.upgrade-item button:focus {
+    background-color: var(--primary-bg-hover);
 }
 .upgrade-item button:disabled {
-    background-color: #ccc;
+    background-color: var(--primary-bg-disabled);
     cursor: not-allowed;
     opacity: 0.7;
 }
@@ -273,10 +284,14 @@ section h2 {
 .project-item button {
     font-size: 0.85em;
     padding: 4px 8px;
-    background-color: #007bff;
+    background-color: var(--primary-bg);
+}
+.project-item button:hover,
+.project-item button:focus {
+    background-color: var(--primary-bg-hover);
 }
 .project-item button:disabled {
-    background-color: #999;
+    background-color: var(--primary-bg-disabled);
 }
 
 /* Hypothalamus Controls */
@@ -308,17 +323,20 @@ button {
     padding: 10px 15px;
     font-size: 1em;
     color: #fff;
-    background-color: #007bff; /* Default blue */
+    background-color: var(--primary-bg); /* Default muted blue */
     border: none;
     border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s ease;
+    transition: background-color 0.3s ease, text-decoration 0.3s ease;
 }
-button:hover {
-    background-color: #0056b3;
+button:hover,
+button:focus {
+    background-color: var(--primary-bg-hover);
+    text-decoration: underline;
 }
-#click-button:hover { /* Ensure #click-button specific hover is maintained */
-    background-color: #218838;
+#click-button:hover,
+#click-button:focus { /* Ensure #click-button specific hover is maintained */
+    background-color: var(--primary-bg-hover);
 }
 
 
@@ -394,11 +412,15 @@ button:hover {
     height: 40px;
     border: none;
     border-radius: 50%;
-    background-color: #007bff;
+    background-color: var(--primary-bg);
     color: #fff;
     font-size: 20px;
     cursor: pointer;
     z-index: 1100;
+}
+#info-button:hover,
+#info-button:focus {
+    background-color: var(--primary-bg-hover);
 }
 
 /* Instructions Overlay */
