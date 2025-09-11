@@ -215,11 +215,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(openFeedSundgrenBtn) openFeedSundgrenBtn.style.display = gameState.unlockedGames.feedSundgren ? '' : 'none';
         },
         updateSingleUpgradeButton(btnEl,canAfford){if(btnEl)btnEl.disabled=!canAfford;},
-        // Path to brain upgrade image is relative to index.html, which lives
-        // inside the "Universal Psychology" folder. The image itself is stored
-        // in the repository root "images" directory, so the correct relative
-        // path needs to go up one level.
-        playBrainUpgradeAnimation(imgSrc="../images/brain-upgrade.png"){
+        // Path to the brain upgrade image is relative to index.html, which is
+        // inside the "Universal Psychology" folder. The image file resides in
+        // this folder's "images" directory, so no parent navigation is needed.
+        playBrainUpgradeAnimation(imgSrc="images/brain-upgrade.png"){
             const overlay=document.getElementById("upgrade-animation-overlay");
             if(!overlay) return;
             overlay.innerHTML="";
