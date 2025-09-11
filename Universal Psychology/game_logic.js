@@ -438,6 +438,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.logMessage('Intermittent Fasting activated: auto-buy every 10s.', 'log-info');
     }
 
+    function stopIntermittentFasting(){
+        if(!intermittentFastingIntervalId) return;
+        clearInterval(intermittentFastingIntervalId);
+        intermittentFastingIntervalId = null;
+        UIManager.logMessage('Intermittent Fasting stopped.', 'log-info');
+    }
+
     function startIrregularSnacks(){
         if(irregularSnacksTimeoutId) return;
         const schedule = () => {
@@ -449,6 +456,13 @@ document.addEventListener('DOMContentLoaded', async () => {
         };
         schedule();
         UIManager.logMessage('Irregular Snacks activated.', 'log-info');
+    }
+
+    function stopIrregularSnacks(){
+        if(!irregularSnacksTimeoutId) return;
+        clearTimeout(irregularSnacksTimeoutId);
+        irregularSnacksTimeoutId = null;
+        UIManager.logMessage('Irregular Snacks stopped.', 'log-info');
     }
     function handleDopamineSlider(event) { gameState.dopamineLevel = parseInt(event.target.value); if(dopamineLevelDisplayDOM) dopamineLevelDisplayDOM.textContent = gameState.dopamineLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
     function handleGabaSlider(event) { gameState.gabaLevel = parseInt(event.target.value); if(gabaLevelDisplayDOM) gabaLevelDisplayDOM.textContent = gameState.gabaLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
@@ -533,6 +547,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function loadGame(slot = currentSaveSlot) {
+        stopIntermittentFasting();
+        stopIrregularSnacks();
         const raw = localStorage.getItem(`up_save_${slot}`);
         if(!raw){ ProjectSystem.renderProjects(); return; }
         try {
@@ -561,6 +577,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function resetGame(slot = currentSaveSlot) {
+        stopIntermittentFasting();
+        stopIrregularSnacks();
         localStorage.removeItem(`up_save_${slot}`);
         location.reload();
     }
