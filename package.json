@@ -1,0 +1,18 @@
+{
+  "name": "psychbrainbuildr",
+  "version": "1.0.0",
+  "description": "This repository contains two small web games along with a supporting React component.",
+  "main": "index.js",
+  "scripts": {
+    "test": "jest",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint \"Universal Psychology/gameUtils.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "devDependencies": {
+    "eslint": "^9.35.0",
+    "jest": "^30.1.3"
+  }
+}

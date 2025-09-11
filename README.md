@@ -31,3 +31,17 @@ python3 -m http.server
 
 Navigate to `index.html` in your browser.
 
+
+## Development
+
+Run unit tests with:
+
+```bash
+npm test
+```
+
+Run ESLint with:
+
+```bash
+npm run lint
+```
