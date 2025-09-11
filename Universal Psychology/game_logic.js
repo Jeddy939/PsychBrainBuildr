@@ -446,7 +446,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function saveGame(slot = currentSaveSlot) {
         const save = {
-            gameState,
+            gameState: { ...gameState },
             coreUpgrades: UpgradeSystem.coreUpgrades,
             proliferationUpgrades: UpgradeSystem.neuronProliferationUpgrades,
             purchasedProjects: gameState.purchasedProjects
@@ -505,8 +505,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         if(!raw) return;
         try {
             const data = JSON.parse(raw);
-            Object.assign(gameState, data.gameState || {});
-            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
+            const savedState = data.gameState || {};
+            Object.assign(gameState, savedState);
+            if (typeof savedState.neuroFuelCost !== 'number') {
+                gameState.neuroFuelCost = calculateNextNeuroFuelCost();
+            }
             if(Array.isArray(data.coreUpgrades)) {
                 data.coreUpgrades.forEach(saved => {
                     const existing = UpgradeSystem.coreUpgrades.find(u => u.id === saved.id);
