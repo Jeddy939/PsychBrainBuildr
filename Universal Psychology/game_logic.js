@@ -313,7 +313,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         purchaseUpgrade(upgradeId, upgradeType) {
             let upg; const srcArr = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; upg = srcArr.find(u => u.id === upgradeId);
             if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; } if (upg.effectApplied) { UIManager.logMessage(`${upg.name} already purchased.`, "log-info"); return; }
-            let canAfford = (upg.costCurrency === "neurons" && gameState.neurons >= upg.cost && (!upg.psychbuckCost || gameState.psychbucks >= upg.cost)) || (upg.costCurrency === "psychbucks" && gameState.psychbucks >= upg.cost);
+            let canAfford = (upg.costCurrency === "neurons" && gameState.neurons >= upg.cost && (!upg.psychbuckCost || gameState.psychbucks >= upg.psychbuckCost)) || (upg.costCurrency === "psychbucks" && gameState.psychbucks >= upg.cost);
             if (canAfford) {
                 const prevBrainLvl = gameState.currentBrainLevel;
                 if(upg.costCurrency==="neurons")gameState.neurons-=upg.cost; if(upg.costCurrency==="psychbucks")gameState.psychbucks-=upg.cost; if(upg.psychbuckCost)gameState.psychbucks-=upg.psychbuckCost;
