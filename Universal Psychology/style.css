@@ -84,17 +84,24 @@ body {
 #click-button { /* General styling for this button is further down */
     padding: 5px 10px;
     font-size: 0.9em;
-    background-color: #28a745;
+    background-color: #555;
 }
 #neurons-display, #psychbucks-display, #iq-display, #ops-display, #neurofuel-display {
     font-size: 1.1em;
     font-weight: bold;
 }
-#neurons-display { color: #28a745; }
-#psychbucks-display { color: #ffc107; }
-#iq-display { color: #007bff; }
-#ops-display { color: #6f42c1; }
-#neurofuel-display { color: #ff7f50; }
+#neurons-display { color: #555; }
+#psychbucks-display { color: #666; }
+#iq-display { color: #767676; }
+#ops-display { color: #666; }
+#neurofuel-display { color: #555; }
+
+/* Icons for stat labels to reduce reliance on color */
+#neurons-display::before { content: "🧠 "; }
+#psychbucks-display::before { content: "💰 "; }
+#iq-display::before { content: "💡 "; }
+#ops-display::before { content: "⚙️ "; }
+#neurofuel-display::before { content: "⛽ "; }
 
 
 /* Main Content Wrapper (for two columns) */
@@ -140,8 +147,8 @@ body {
 }
 .brain-viz-wrapper h2 { /* Title "Your Brain" */
     margin: 0;
-    font-size: 1.2em; 
-    color: #007bff;
+    font-size: 1.2em;
+    color: #555;
     flex-shrink: 0;
 }
 #threejs-canvas-container {
@@ -185,7 +192,7 @@ section {
 section h2 {
     margin-top: 0;
     margin-bottom: 8px;
-    color: #007bff;
+    color: #555;
     font-size: 1em;
 }
 
@@ -236,10 +243,10 @@ section h2 {
 .upgrade-item button {
     font-size: 0.85em;
     padding: 4px 8px;
-    background-color: #28a745;
+    background-color: #666;
 }
 .upgrade-item button:hover {
-    background-color: #218838;
+    background-color: #555;
 }
 .upgrade-item button:disabled {
     background-color: #ccc;
@@ -273,7 +280,7 @@ section h2 {
 .project-item button {
     font-size: 0.85em;
     padding: 4px 8px;
-    background-color: #007bff;
+    background-color: #666;
 }
 .project-item button:disabled {
     background-color: #999;
@@ -308,17 +315,17 @@ button {
     padding: 10px 15px;
     font-size: 1em;
     color: #fff;
-    background-color: #007bff; /* Default blue */
+    background-color: #666; /* Muted default */
     border: none;
     border-radius: 5px;
     cursor: pointer;
     transition: background-color 0.3s ease;
 }
 button:hover {
-    background-color: #0056b3;
+    background-color: #555;
 }
 #click-button:hover { /* Ensure #click-button specific hover is maintained */
-    background-color: #218838;
+    background-color: #444;
 }
 
 
@@ -394,7 +401,7 @@ button:hover {
     height: 40px;
     border: none;
     border-radius: 50%;
-    background-color: #007bff;
+    background-color: #666;
     color: #fff;
     font-size: 20px;
     cursor: pointer;
