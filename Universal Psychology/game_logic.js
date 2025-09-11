@@ -166,19 +166,287 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
-        { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 10, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: () => { UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info"); gameState.currentBrainLevel = 1; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); if(brainVisualAreaDOM) brainVisualAreaDOM.style.display = 'block'; if(leftColumnDOM) leftColumnDOM.style.display = 'block'; if(neurofuelAreaDOM) neurofuelAreaDOM.style.display = 'block'; if(projectsAreaDOM) projectsAreaDOM.style.display = 'block'; QuestionSystem.setOverallUnlockState(true); QuestionSystem.unlockDifficultyLevel(0); if (neuronProliferationAreaDOM) { neuronProliferationAreaDOM.style.display = 'block'; UpgradeSystem.renderNeuronProliferationUpgrades(); } UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock"); }},
-        { id: "biggerBrain2", name: "Brain Growth: Stage 2", costCurrency: "neurons", cost: 250, description: "Unlocks MEDIUM Qs & Hypothalamus.", effectApplied: false, dependsOn: "biggerBrain1", type: 'brain', action: () => { gameState.currentBrainLevel = 2; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(1); if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block'; UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock"); }},
-        { id: "biggerBrain3", name: "Brain Growth: Stage 3", costCurrency: "neurons", cost: 1000, description: "Unlocks HARD Qs & Amygdala research.", effectApplied: false, dependsOn: "biggerBrain2", type: 'brain', action: () => { gameState.currentBrainLevel = 3; gameState.neuroFuelCost = calculateNextNeuroFuelCost(); UIManager.callUpdateBrainVisual(); QuestionSystem.unlockDifficultyLevel(2); startIrregularSnacks(); UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock"); UpgradeSystem.renderCoreUpgrades(); }},
-        { id: "amygdalaActivation", name: "Activate Amygdala", costCurrency: "neurons", cost: 5000, psychbuckCost: 200, description: "Doubles passive neuron production. WARNING: Random stimuli.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2; AnxietySystem.activateAmygdala(); UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock"); /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */ }},
-        { id: "nucleusAccumbens", name: "Nucleus Accumbens", costCurrency: "neurons", cost: 2000, description: "Unlocks access to NeuroGames.", effectApplied: false, dependsOn: "biggerBrain3", type: 'brain', action: () => { gameState.unlockedGames.neurosnake = true; gameState.unlockedGames.brainTetris = true; gameState.unlockedGames.flappyFreud = true; gameState.unlockedGames.feedSundgren = true; UIManager.updateMinigameButtons(); UIManager.logMessage("Pleasure center engaged! Minigames available.", 'log-unlock'); }}
+        { id: "biggerBrain1",
+          name: {
+            caveman: "Big Brain One",
+            child: "Brain Grow 1",
+            normal: "Brain Growth: Stage 1",
+            professor: "Cerebral Augmentation I"
+          },
+          costCurrency: "neurons",
+          cost: 10,
+          description: {
+            caveman: "Brain bigger now. Easy questions come.",
+            child: "Your brain gets bigger so you can answer easy questions and start neuron factories.",
+            normal: "Unlocks EASY Qs & Neuron Proliferation.",
+            professor: "Enables elementary query processing and initiates neuronal proliferation protocols."
+          },
+          effectApplied: false,
+          type: 'brain',
+          action: () => {
+            UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info");
+            gameState.currentBrainLevel = 1;
+            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
+            UIManager.callUpdateBrainVisual();
+            if(brainVisualAreaDOM) brainVisualAreaDOM.style.display = 'block';
+            if(leftColumnDOM) leftColumnDOM.style.display = 'block';
+            if(neurofuelAreaDOM) neurofuelAreaDOM.style.display = 'block';
+            if(projectsAreaDOM) projectsAreaDOM.style.display = 'block';
+            QuestionSystem.setOverallUnlockState(true);
+            QuestionSystem.unlockDifficultyLevel(0);
+            if (neuronProliferationAreaDOM) {
+              neuronProliferationAreaDOM.style.display = 'block';
+              UpgradeSystem.renderNeuronProliferationUpgrades();
+            }
+            UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock");
+          }
+        },
+        { id: "biggerBrain2",
+          name: {
+            caveman: "Big Brain Two",
+            child: "Brain Grow 2",
+            normal: "Brain Growth: Stage 2",
+            professor: "Cerebral Augmentation II"
+          },
+          costCurrency: "neurons",
+          cost: 250,
+          description: {
+            caveman: "Brain now medium big. Medium questions show up. Hypo-tha-lam-what now.",
+            child: "Brain gets even bigger! Medium questions appear and you can poke the hypothalamus.",
+            normal: "Unlocks MEDIUM Qs & Hypothalamus.",
+            professor: "Permits intermediate interrogatives and grants access to hypothalamic tinkering."
+          },
+          effectApplied: false,
+          dependsOn: "biggerBrain1",
+          type: 'brain',
+          action: () => {
+            gameState.currentBrainLevel = 2;
+            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
+            UIManager.callUpdateBrainVisual();
+            QuestionSystem.unlockDifficultyLevel(1);
+            if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block';
+            UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock");
+          }
+        },
+        { id: "biggerBrain3",
+          name: {
+            caveman: "Big Brain Three",
+            child: "Brain Grow 3",
+            normal: "Brain Growth: Stage 3",
+            professor: "Cerebral Augmentation III"
+          },
+          costCurrency: "neurons",
+          cost: 1000,
+          description: {
+            caveman: "Brain max huge. Hard questions come. Amygdala research time.",
+            child: "Huge brain! Hard questions unlocked and we get to research the amygdala thingy.",
+            normal: "Unlocks HARD Qs & Amygdala research.",
+            professor: "Enables challenging inquiries and authorizes amygdaloid investigations."
+          },
+          effectApplied: false,
+          dependsOn: "biggerBrain2",
+          type: 'brain',
+          action: () => {
+            gameState.currentBrainLevel = 3;
+            gameState.neuroFuelCost = calculateNextNeuroFuelCost();
+            UIManager.callUpdateBrainVisual();
+            QuestionSystem.unlockDifficultyLevel(2);
+            startIrregularSnacks();
+            UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock");
+            UpgradeSystem.renderCoreUpgrades();
+          }
+        },
+        { id: "amygdalaActivation",
+          name: {
+            caveman: "Turn Scary Almond",
+            child: "Amygdala ON!",
+            normal: "Activate Amygdala",
+            professor: "Amygdaloid Activation Protocol"
+          },
+          costCurrency: "neurons",
+          cost: 5000,
+          psychbuckCost: 200,
+          description: {
+            caveman: "Make almonds scream. Neurons double but scary things happen.",
+            child: "Flip the scary almond switch: double neurons but random spooky stuff.",
+            normal: "Doubles passive neuron production. WARNING: Random stimuli.",
+            professor: "Doubles baseline neuronal output; expect stochastic affective perturbations."
+          },
+          effectApplied: false,
+          dependsOn: "biggerBrain3",
+          type: 'brain',
+          action: () => {
+            gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2;
+            AnxietySystem.activateAmygdala();
+            UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock");
+            /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */
+          }
+        },
+        { id: "nucleusAccumbens",
+          name: {
+            caveman: "Happy Center",
+            child: "Fun Brain Hub",
+            normal: "Nucleus Accumbens",
+            professor: "Accumbal Pleasure Nexus"
+          },
+          costCurrency: "neurons",
+          cost: 2000,
+          description: {
+            caveman: "Open fun games for brain.",
+            child: "Unlocks goofy brain games to make neurons giggle.",
+            normal: "Unlocks access to NeuroGames.",
+            professor: "Grants entry to neuro-gamic recreational modules."
+          },
+          effectApplied: false,
+          dependsOn: "biggerBrain3",
+          type: 'brain',
+          action: () => {
+            gameState.unlockedGames.neurosnake = true;
+            gameState.unlockedGames.brainTetris = true;
+            gameState.unlockedGames.flappyFreud = true;
+            gameState.unlockedGames.feedSundgren = true;
+            UIManager.updateMinigameButtons();
+            UIManager.logMessage("Pleasure center engaged! Minigames available.", 'log-unlock');
+          }
+        }
     ];
     const neuronProliferationUpgrades_raw_data = [
-        { id: "prolifFactory", name: "Neuron Proliferation Factory", description: "Builds a facility for passive neuron growth (+0.5/sec).", costCurrency: "psychbucks", cost: 10, neuronBoost: 0.5, effectApplied: false, type: 'proliferation', action: () => { if(factoryAreaDOM) { factoryAreaDOM.style.display = 'block'; UIManager.updateFactoryDisplay(); } } },
-        { id: "dendriticSprouting", name: "Dendritic Sprouting", description: "Increase passive neuron production by 0.1%.", costCurrency: "psychbucks", cost: 25, percentBoost: 0.1, effectApplied: false, dependsOn: "prolifFactory", type: 'proliferation' },
-        { id: "myelination", name: "Myelination", description: "Boost production but consumes more fuel and raises anxiety.", costCurrency: "psychbucks", cost: 60, percentBoost: 20, extraFuel: 0.2, anxietyBoost: 5, effectApplied: false, dependsOn: "dendriticSprouting", type: 'proliferation' },
-        { id: "metabolicEfficiency", name: "Metabolic Efficiency", description: "Cuts Neurofuel consumption by 50%.", costCurrency: "psychbucks", cost: 80, effectApplied: false, factoryRequirement: 4, type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
-        { id: "intermittentFasting", name: "Intermittent Fasting", description: "Automatically purchase fuel every 10 seconds.", costCurrency: "psychbucks", cost: 120, effectApplied: false, dependsOn: "metabolicEfficiency", type: 'proliferation', action: () => { startIntermittentFasting(); } },
-        { id: "metabolicEfficiency2", name: "Metabolic Efficiency II", description: "Further cuts fuel use by 50%.", costCurrency: "psychbucks", cost: 200, effectApplied: false, dependsOn: "metabolicEfficiency", brainRequirement: 3, type: 'proliferation', action: () => { gameState.manualFuelMultiplier *= 0.5; gameState.passiveNeuroFuelMultiplier *= 0.5; } },
+        { id: "prolifFactory",
+          name: {
+            caveman: "Brain Hut",
+            child: "Neuron Factory",
+            normal: "Neuron Proliferation Factory",
+            professor: "Autogenous Neuron Fabricator"
+          },
+          description: {
+            caveman: "Hut make brain cells crawl out (+0.5/s).",
+            child: "Build a little factory that pops out 0.5 neurons per sec.",
+            normal: "Builds a facility for passive neuron growth (+0.5/sec).",
+            professor: "Constructs an automated neurogenesis facility yielding 0.5 neurons/second."
+          },
+          costCurrency: "psychbucks",
+          cost: 10,
+          neuronBoost: 0.5,
+          effectApplied: false,
+          type: 'proliferation',
+          action: () => {
+            if(factoryAreaDOM) {
+              factoryAreaDOM.style.display = 'block';
+              UIManager.updateFactoryDisplay();
+            }
+          }
+        },
+        { id: "dendriticSprouting",
+          name: {
+            caveman: "Branchy Brain",
+            child: "Branching Out",
+            normal: "Dendritic Sprouting",
+            professor: "Dendritogenesis Enhancement"
+          },
+          description: {
+            caveman: "Little branches grow, brain juice drip +0.1%.",
+            child: "Neurons grow branches so they work a teeny bit harder (+0.1%).",
+            normal: "Increase passive neuron production by 0.1%.",
+            professor: "Marginally augments passive neuronal output by 0.1% through dendritic extension."
+          },
+          costCurrency: "psychbucks",
+          cost: 25,
+          percentBoost: 0.1,
+          effectApplied: false,
+          dependsOn: "prolifFactory",
+          type: 'proliferation'
+        },
+        { id: "myelination",
+          name: {
+            caveman: "Brain Fat Coating",
+            child: "Super Wire Cover",
+            normal: "Myelination",
+            professor: "Oligodendrocytic Insulation Initiative"
+          },
+          description: {
+            caveman: "Wrap neurons in fat. Brain faster, need more juice, feel edgy.",
+            child: "Give neurons thick coats: speed up, use more fuel, anxiety goes brr.",
+            normal: "Boost production but consumes more fuel and raises anxiety.",
+            professor: "Enhances neuronal conduction velocity at the expense of fuel efficiency and emotional stability."
+          },
+          costCurrency: "psychbucks",
+          cost: 60,
+          percentBoost: 20,
+          extraFuel: 0.2,
+          anxietyBoost: 5,
+          effectApplied: false,
+          dependsOn: "dendriticSprouting",
+          type: 'proliferation'
+        },
+        { id: "metabolicEfficiency",
+          name: {
+            caveman: "Brain Not Hungry",
+            child: "Fuel Diet",
+            normal: "Metabolic Efficiency",
+            professor: "Neuroenergetic Optimization"
+          },
+          description: {
+            caveman: "Brain sip fuel, not gulp. Half use.",
+            child: "Teach brain to diet: uses half the fuel.",
+            normal: "Cuts Neurofuel consumption by 50%.",
+            professor: "Reduces neurofuel expenditure by precisely fifty percent."
+          },
+          costCurrency: "psychbucks",
+          cost: 80,
+          effectApplied: false,
+          factoryRequirement: 4,
+          type: 'proliferation',
+          action: () => {
+            gameState.manualFuelMultiplier *= 0.5;
+            gameState.passiveNeuroFuelMultiplier *= 0.5;
+          }
+        },
+        { id: "intermittentFasting",
+          name: {
+            caveman: "Time Snack",
+            child: "Auto Fuel Snacks",
+            normal: "Intermittent Fasting",
+            professor: "Scheduled Neurofuel Acquisition"
+          },
+          description: {
+            caveman: "Every so often, brain get fuel snack by itself.",
+            child: "Every 10 seconds your brain buys a snack all on its own.",
+            normal: "Automatically purchase fuel every 10 seconds.",
+            professor: "Automates neurofuel procurement at ten-second intervals."
+          },
+          costCurrency: "psychbucks",
+          cost: 120,
+          effectApplied: false,
+          dependsOn: "metabolicEfficiency",
+          type: 'proliferation',
+          action: () => {
+            startIntermittentFasting();
+          }
+        },
+        { id: "metabolicEfficiency2",
+          name: {
+            caveman: "Brain Not Hungry Two",
+            child: "Fuel Diet 2",
+            normal: "Metabolic Efficiency II",
+            professor: "Neuroenergetic Optimization II"
+          },
+          description: {
+            caveman: "Brain sip even more. Half of half.",
+            child: "Brain goes on diet again: half of the half fuel!",
+            normal: "Further cuts fuel use by 50%.",
+            professor: "Imposes an additional fifty percent reduction in neurofuel consumption."
+          },
+          costCurrency: "psychbucks",
+          cost: 200,
+          effectApplied: false,
+          dependsOn: "metabolicEfficiency",
+          brainRequirement: 3,
+          type: 'proliferation',
+          action: () => {
+            gameState.manualFuelMultiplier *= 0.5;
+            gameState.passiveNeuroFuelMultiplier *= 0.5;
+          }
+        },
     ];
 
     const projectData = [
@@ -223,7 +491,28 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearFeedbackAreas() { if(feedbackAreaDOM)feedbackAreaDOM.textContent=''; if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent='';streakFeedbackAreaDOM.className='';}},
         updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateNeuroFuelDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();this.updateMinigameButtons();UpgradeSystem.updateUpgradeButtons();ProjectSystem.updateProjectButtons();},
         callUpdateBrainVisual() { if(window.GameVisuals && typeof window.GameVisuals.updateBrainVisual === 'function'){window.GameVisuals.updateBrainVisual({level:gameState.currentBrainLevel,dopamine:gameState.dopamineLevel,gaba:gameState.gabaLevel});}},
-        renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${upg.name} ${sTxt}</h3><p>${upg.description}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${upg.name}</h3><p>${upg.description}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
+        renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){
+            if(!listElDOM)return;
+            listElDOM.innerHTML="";
+            const lvl=LanguageManager?.level||'normal';
+            upgsToRender.forEach(upg=>{
+                const itm=document.createElement('div');
+                itm.classList.add('upgrade-item');
+                if(upg.effectApplied){
+                    itm.classList.add('purchased');
+                    let sTxt="(Purchased)";
+                    if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";
+                    itm.innerHTML=`<h3>${upg.name[lvl]} ${sTxt}</h3><p>${upg.description[lvl]}</p>`;
+                }else{
+                    let cTxt=`${upg.cost} ${upg.costCurrency}`;
+                    if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;
+                    itm.innerHTML=`<h3>${upg.name[lvl]}</h3><p>${upg.description[lvl]}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;
+                    const btn=itm.querySelector('button');
+                    if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);
+                }
+                listElDOM.appendChild(itm);
+            });
+        },
         updateFactoryDisplay(){
             if(!factoryAreaDOM) return;
             if(factoryCountDOM) factoryCountDOM.textContent = gameState.factoryCount;
@@ -333,7 +622,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderNeuronProliferationUpgrades() { UIManager.logMessage("[UpgradeSystem] renderNeuronProliferationUpgrades called.", "log-info"); if (neuronProliferationAreaDOM && neuronProliferationAreaDOM.style.display !== 'none') { const upgs = this.getFilteredUpgrades("proliferation"); if (!neuronProliferationUpgradesListDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: neuronProliferationUpgradesListDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, neuronProliferationUpgradesListDOM, "proliferation"); this.updateUpgradeButtons(); } else { UIManager.logMessage("[UpgradeSystem] Neuron prolif area hidden, not rendering.", "log-info"); } },
         purchaseUpgrade(upgradeId, upgradeType) {
             let upg; const srcArr = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; upg = srcArr.find(u => u.id === upgradeId);
-            if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; } if (upg.effectApplied) { UIManager.logMessage(`${upg.name} already purchased.`, "log-info"); return; }
+            const lvl=LanguageManager?.level||'normal';
+            if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; }
+            const upgName=upg.name[lvl];
+            if (upg.effectApplied) { UIManager.logMessage(`${upgName} already purchased.`, "log-info"); return; }
             let canAfford = (upg.costCurrency === "neurons" && gameState.neurons >= upg.cost && (!upg.psychbuckCost || gameState.psychbucks >= upg.psychbuckCost)) || (upg.costCurrency === "psychbucks" && gameState.psychbucks >= upg.cost);
             if (canAfford) {
                 const prevBrainLvl = gameState.currentBrainLevel;
@@ -357,13 +649,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const origUpgData=(upgradeType==="core"?coreUpgrades_raw_data:neuronProliferationUpgrades_raw_data).find(u=>u.id===upgradeId);
                 if(origUpgData&&typeof origUpgData.action==='function'){origUpgData.action();}
                 if(prevBrainLvl!==gameState.currentBrainLevel) ProjectSystem.renderProjects();
-                UIManager.logMessage(`Upgrade: ${upg.name} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
+                UIManager.logMessage(`Upgrade: ${upgName} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
                 if(upg.type=="brain") UIManager.playBrainUpgradeAnimation();
                 if(upgradeType==="core")this.renderCoreUpgrades();else this.renderNeuronProliferationUpgrades();
-            } else { UIManager.logMessage(`Not enough for ${upg.name}.`, "log-warning"); }
+            } else { UIManager.logMessage(`Not enough for ${upgName}.`, "log-warning"); }
         },
         getUpgradeData(type, brainLevelToFind) { const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; return source.find(upg => upg.type === 'brain' && (upg.id.match(/biggerBrain(\d+)/) && parseInt(upg.id.match(/biggerBrain(\d+)/)[1]) === brainLevelToFind)); },
-        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; UIManager.logMessage(`Reverted purchase status for ${upg.name}.`, "log-info"); } },
+        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; UIManager.logMessage(`Reverted purchase status for ${upg.name[LanguageManager?.level||'normal']}.`, "log-info"); } },
         updateUpgradeButtons() { const allBtns=document.querySelectorAll('#upgrades-list button[data-upgrade-id],#neuron-proliferation-upgrades-list button[data-upgrade-id]');allBtns.forEach(btn=>{const uid=btn.dataset.upgradeId;const utype=btn.dataset.upgradeType;let upg=utype==="core"?this.coreUpgrades.find(u=>u.id===uid):this.neuronProliferationUpgrades.find(u=>u.id===uid);if(upg&&!upg.effectApplied){let canAfford=(upg.costCurrency==="neurons"&&gameState.neurons>=upg.cost&&(!upg.psychbuckCost||gameState.psychbucks>=upg.psychbuckCost))||(upg.costCurrency==="psychbucks"&&gameState.psychbucks>=upg.cost);UIManager.updateSingleUpgradeButton(btn,canAfford);}else if(upg&&upg.effectApplied){UIManager.updateSingleUpgradeButton(btn,false);}else{UIManager.updateSingleUpgradeButton(btn,false);}}); }
     };
 
@@ -378,7 +670,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         activateAmygdala(){if(this.isAmygdalaOnline)return;this.isAmygdalaOnline=true;this._startScaryStimuliTimer();UIManager.logMessage("AnxietySystem: Amygdala online.","log-info");},
         increaseMeter(amount){if(!this.isAttackActive){this.meter=Math.min(MAX_ANXIETY,this.meter+amount);UIManager.logMessage(`Anxiety meter stress: +${amount}.`,'log-info');}},
         update(){if(this.isAttackActive){if(gameState.gabaLevel>0){this.meter=Math.max(0,this.meter-(gameState.gabaLevel/20));if(this.meter<=0){this.isAttackActive=false;this.timeAtHighDopamine=0;UIManager.logMessage("Anxiety subsided.","log-info");}}return;}let currentAnxietyChange=0;if(gameState.currentBrainLevel>=2&&gameState.dopamineLevel>ANXIETY_THRESHOLD&&(gameState.gabaLevel<gameState.dopamineLevel*0.4||gameState.gabaLevel<20)){this.timeAtHighDopamine++;currentAnxietyChange=(gameState.dopamineLevel/25)*this.BASE_ANXIETY_INCREASE_FACTOR;if(this.isAmygdalaOnline&&this.activeStimuliDOMElements.length>0){currentAnxietyChange*=2;}}else{this.timeAtHighDopamine=Math.max(0,this.timeAtHighDopamine-1);currentAnxietyChange=-(this.BASE_ANXIETY_DECREASE_FACTOR+(gameState.gabaLevel/15));}this.meter=Math.min(MAX_ANXIETY,Math.max(0,this.meter+currentAnxietyChange));if(this.timeAtHighDopamine>=ANXIETY_TIME_LIMIT&&this.meter>ANXIETY_SUSTAINED_THRESHOLD&&!this.isAttackActive){this._triggerAttack();}},
-        _triggerAttack(){if(this.isAttackActive)return;this.isAttackActive=true;this.timeAtHighDopamine=0;UIManager.logMessage("ANXIETY ATTACK! Production halted. Stability compromised!","log-warning");gameState.neurons=Math.floor(gameState.neurons*0.8);let prevBrainLvl=gameState.currentBrainLevel;gameState.currentBrainLevel=Math.max(0,gameState.currentBrainLevel-1);if(prevBrainLvl>gameState.currentBrainLevel){const downgradedUpg=UpgradeSystem.getUpgradeData("core",prevBrainLvl);if(downgradedUpg){UpgradeSystem.markUpgradeNotApplied(downgradedUpg.id,"core");UIManager.logMessage(`Stability lost. ${downgradedUpg.name} requires reinforcement.`,"log-warning");}}UIManager.callUpdateBrainVisual();UpgradeSystem.renderCoreUpgrades();UIManager.updateAnxietyDisplay();UIManager.updateAllDisplays();if(prevBrainLvl>gameState.currentBrainLevel)ProjectSystem.renderProjects();},
+        _triggerAttack(){if(this.isAttackActive)return;this.isAttackActive=true;this.timeAtHighDopamine=0;UIManager.logMessage("ANXIETY ATTACK! Production halted. Stability compromised!","log-warning");gameState.neurons=Math.floor(gameState.neurons*0.8);let prevBrainLvl=gameState.currentBrainLevel;gameState.currentBrainLevel=Math.max(0,gameState.currentBrainLevel-1);if(prevBrainLvl>gameState.currentBrainLevel){const downgradedUpg=UpgradeSystem.getUpgradeData("core",prevBrainLvl);if(downgradedUpg){UpgradeSystem.markUpgradeNotApplied(downgradedUpg.id,"core");const dName=downgradedUpg.name[LanguageManager?.level||'normal'];UIManager.logMessage(`Stability lost. ${dName} requires reinforcement.`,"log-warning");}}UIManager.callUpdateBrainVisual();UpgradeSystem.renderCoreUpgrades();UIManager.updateAnxietyDisplay();UIManager.updateAllDisplays();if(prevBrainLvl>gameState.currentBrainLevel)ProjectSystem.renderProjects();},
         _startScaryStimuliTimer(){if(this.scaryStimuliIntervalId)clearInterval(this.scaryStimuliIntervalId);this.scaryStimuliIntervalId=setInterval(()=>this._triggerScaryStimuliBatch(),SCARY_STIMULI_INTERVAL_MS);UIManager.logMessage("Amygdala awareness protocol initiated.","log-warning");},
         _triggerScaryStimuliBatch(){if(!this.isAmygdalaOnline||document.hidden)return;this.activeStimuliDOMElements.forEach(sD=>sD.remove());this.activeStimuliDOMElements=[];const numS=Math.floor(Math.random()*3)+3;UIManager.logMessage(`Awareness: ${numS} abrupt stimuli!`,"log-warning");for(let i=0;i<numS;i++)setTimeout(()=>this._createScaryStimulus(),i*150);},
         _createScaryStimulus(){if(!scaryStimuliOverlayDOM)return;const sD=document.createElement('div');const sT=["DANGER!","FEAR!","WATCH OUT!","PANIC!","THREAT!","ALERT!","INTRUSION!"];sD.textContent=sT[Math.floor(Math.random()*sT.length)];sD.className='scary-stimulus-popup';const oW=scaryStimuliOverlayDOM.offsetWidth,oH=scaryStimuliOverlayDOM.offsetHeight,pW=150,pH=60;sD.style.left=`${Math.random()*Math.max(0,oW-pW)}px`;sD.style.top=`${Math.random()*Math.max(0,oH-pH)}px`;sD.style.opacity='0';sD.style.transform='scale(0.5)';sD.onclick=()=>this._dismissScaryStimulus(sD);this.activeStimuliDOMElements.push(sD);scaryStimuliOverlayDOM.appendChild(sD);setTimeout(()=>{sD.style.opacity='1';sD.style.transform='scale(1)';},50);},
