@@ -1,4 +1,10 @@
 /* Add this at the very top */
+:root {
+    --bg-color: #f5f7fa;
+    --text-color: #333333;
+    --accent-color: #31708f;
+}
+
 *, *::before, ::after {
     box-sizing: border-box;
 }
@@ -11,8 +17,8 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background-color: #f0f0f0;
-    color: #333;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     height: 100%;
     display: flex;
     justify-content: center;
@@ -25,7 +31,8 @@ body {
     max-width: 1600px;
     height: 95vh;
     max-height: 1000px;
-    background-color: #fff;
+    background-color: var(--bg-color);
+    color: var(--text-color);
     border-radius: 8px;
     box-shadow: 0 0 15px rgba(0,0,0,0.15);
     display: flex;
@@ -36,8 +43,8 @@ body {
 
 /* Info Banner */
 #info-banner {
-    background-color: #e9f5ff;
-    border: 1px solid #bce8f1;
+    background-color: var(--bg-color);
+    border: 1px solid var(--accent-color);
     border-radius: 4px;
     padding: 8px 12px;
     margin-bottom: 10px;
@@ -46,6 +53,7 @@ body {
     font-size: 0.9em;
     line-height: 1.4;
     flex-shrink: 0; /* Prevent banner from shrinking */
+    color: var(--text-color);
 }
 #info-banner p { margin: 0 0 4px 0; padding: 2px 0; }
 .log-info { color: #31708f; }
@@ -59,10 +67,10 @@ body {
     /* REMOVED: justify-content: space-between; */
     /* Stats container will now naturally align to the left */
     align-items: center;
-    padding: 0 5px 10px 5px; 
-    border-bottom: 1px solid #eee;
+    padding: 0 5px 10px 5px;
+    border-bottom: 1px solid var(--accent-color);
     margin-bottom: 15px;
-    flex-shrink: 0; 
+    flex-shrink: 0;
 }
 /* REMOVED: #page-header h1 styling is no longer needed */
 
@@ -89,12 +97,8 @@ body {
 #neurons-display, #psychbucks-display, #iq-display, #ops-display, #neurofuel-display {
     font-size: 1.1em;
     font-weight: bold;
+    color: var(--accent-color);
 }
-#neurons-display { color: #555; }
-#psychbucks-display { color: #666; }
-#iq-display { color: #767676; }
-#ops-display { color: #666; }
-#neurofuel-display { color: #555; }
 
 /* Icons for stat labels to reduce reliance on color */
 #neurons-display::before { content: "🧠 "; }
@@ -148,7 +152,7 @@ body {
 .brain-viz-wrapper h2 { /* Title "Your Brain" */
     margin: 0;
     font-size: 1.2em;
-    color: #555;
+    color: var(--accent-color);
     flex-shrink: 0;
 }
 #threejs-canvas-container {
@@ -192,7 +196,7 @@ section {
 section h2 {
     margin-top: 0;
     margin-bottom: 8px;
-    color: #555;
+    color: var(--accent-color);
     font-size: 1em;
 }
 
