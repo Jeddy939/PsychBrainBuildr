@@ -196,7 +196,8 @@ section h2 {
     font-style: italic;
     line-height: 1.4;
 }
-#feedback-area {
+#feedback-area,
+#streak-feedback-area {
     margin-top: 10px;
     font-weight: bold;
     min-height: 1.2em;
