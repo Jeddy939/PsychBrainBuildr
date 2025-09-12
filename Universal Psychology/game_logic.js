@@ -1,4 +1,5 @@
 // game_logic.js
+import LanguageManager from './language.js';
 
 document.addEventListener('DOMContentLoaded', async () => {
     // --- 1. GAME STATE OBJECT ---
@@ -76,7 +77,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(typeof p.effect === 'function') p.effect.call(p);
             p.purchased = true;
             gameState.purchasedProjects.push(id);
-            UIManager.logMessage(`Project completed: ${p.title}`, 'log-upgrade');
+            UIManager.logMessage(LanguageManager.log('projectCompleted', {title: p.title}), 'log-upgrade');
             this.renderProjects();
             UIManager.updateAllDisplays();
         },
@@ -391,7 +392,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleManualGeneration() {
         if (AnxietySystem.isAttackCurrentlyActive()) { UIManager.logMessage("Brain recovering... clicking disabled (Anxiety Active).", "log-warning"); return; }
         const possible = Math.min(gameState.neuronsPerClick, gameState.neuroFuel / gameState.manualFuelMultiplier);
-        if(possible <= 0){ UIManager.logMessage('Out of NeuroFuel!', 'log-warning'); return; }
+        if(possible <= 0){ UIManager.logMessage(LanguageManager.log('outOfNeuroFuel'), 'log-warning'); return; }
         let neuronsBeforeClick = gameState.neurons; gameState.neurons += possible; gameState.totalNeuronsGenerated += possible;
         gameState.mindOps += possible * OPS_PER_NEURON;
         gameState.neuroFuel -= possible * gameState.manualFuelMultiplier;
@@ -413,7 +414,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UIManager.logMessage(`Proliferation Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
             ProjectSystem.renderProjects();
         } else {
-            UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
+            UIManager.logMessage(LanguageManager.log('notEnoughPsychbucks', {item: 'factory'}), 'log-warning');
         }
         UIManager.updateAllDisplays();
         UpgradeSystem.renderNeuronProliferationUpgrades();
@@ -427,7 +428,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             UIManager.logMessage(`Purchased ${item.emoji} ${item.name}! (+${item.fuel} Fuel)`, 'log-upgrade');
             gameState.neuroFuelCost = calculateNextNeuroFuelCost();
         } else {
-            UIManager.logMessage('Not enough Psychbucks for food.', 'log-warning');
+            UIManager.logMessage(LanguageManager.log('notEnoughPsychbucks', {item: 'food'}), 'log-warning');
         }
         UIManager.updateAllDisplays();
     }

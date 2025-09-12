@@ -1,4 +1,5 @@
 // neurosnake.js - enhanced snake variant rewarding Psychbucks
+import LanguageManager from './language.js';
 
 // Grid size and cell dimension will be adjusted dynamically
 let cellSize = 30;
@@ -256,7 +257,7 @@ function endGame(){
         const gs = api.getGameState();
         gs.psychbucks += score;
         api.updateDisplays();
-        api.logMessage(`NeuroSnake finished: +${score} Psychbucks!`, 'log-info');
+        api.logMessage(LanguageManager.log('neuroSnakeFinished', {score}), 'log-info');
     }
     if(instructionDisplay) instructionDisplay.textContent = 'Game over';
 }
