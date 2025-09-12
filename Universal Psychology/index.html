@@ -25,7 +25,7 @@
             <!-- REMOVED: <h1>Universal Psychology</h1> -->
             <div class="header-stats-container">
                 <div class="neuron-control">
-                    <button id="click-button">Add Neurons</button>
+                    <button id="click-button" data-lang-key="addNeurons"></button>
                     <div id="neurons-display">Neurons: 0</div>
                 </div>
                 <div id="psychbucks-display">Psychbucks: 0 | Passive: 0.0/s</div>
@@ -50,7 +50,7 @@
         <div class="content-wrapper" style="display:none;">
             <aside class="left-column" style="display:none;">
                 <section id="question-area">
-                    <h2>Test Your Knowledge</h2>
+                    <h2 data-lang-key="testYourKnowledge"></h2>
                     <div id="question-text">Upgrade your brain to unlock psychology questions!</div>
                     <div id="answer-options"></div>
                     <div id="feedback-area"></div>
@@ -58,7 +58,7 @@
                 </section>
 
                 <section id="minigames-area">
-                    <h2>NeuroGames</h2>
+                    <h2 data-lang-key="neuroGames"></h2>
                     <button id="open-neurosnake" style="display:none;">Play NeuroSnake</button>
                     <button id="open-braintetris" style="display:none;">Play Brain Tetris</button>
                     <button id="open-flappyfreud" style="display:none;">Play Flappy Freud</button>
@@ -70,7 +70,7 @@
             <main class="right-column">
                 <section id="brain-visual-area" style="display:none;">
                     <div class="brain-viz-wrapper">
-                        <h2>Your Brain</h2>
+                        <h2 data-lang-key="yourBrain"></h2>
                         <div id="threejs-canvas-container"></div>
                     </div>
                 </section>
@@ -80,43 +80,43 @@
                 <!-- Container for scrollable content below brain viz -->
                 <div class="right-column-lower-content">
                     <section id="upgrades-area" style="display:none;">
-                        <h2>Core Upgrades</h2>
+                        <h2 data-lang-key="coreUpgrades"></h2>
                         <div id="upgrades-list"></div>
                     </section>
 
                     <section id="factory-area" style="display: none;">
-                        <h2>Proliferation Factories</h2>
+                        <h2 data-lang-key="proliferationFactories"></h2>
                         <p>Factories: <span id="factory-count">0</span></p>
                         <p>Cost: <span id="factory-cost">10</span> Psychbucks</p>
-                        <button id="buy-factory-btn">Buy Proliferation Factory</button>
+                        <button id="buy-factory-btn" data-lang-key="buyFactory"></button>
                     </section>
 
                     <section id="neuron-proliferation-area" style="display: none;">
-                        <h2>Neuron Proliferation</h2>
+                        <h2 data-lang-key="neuronProliferation"></h2>
                         <div id="neuron-proliferation-upgrades-list"></div>
                     </section>
 
                     <section id="neurofuel-area" style="display:none;">
-                        <h2>NeuroFuel</h2>
+                        <h2 data-lang-key="neurofuel"></h2>
                         <p>Fuel: <span id="neurofuel-count">10</span></p>
                         <p>Cost: <span id="neurofuel-cost">1</span> Psychbucks</p>
-                        <button id="buy-neurofuel-btn">Buy Food</button>
+                        <button id="buy-neurofuel-btn" data-lang-key="buyFood"></button>
                     </section>
 
                     <section id="projects-area" style="display:none;">
-                        <h2>Projects</h2>
+                        <h2 data-lang-key="projects"></h2>
                         <div id="projects-list"></div>
                     </section>
 
                     <section id="hypothalamus-controls-area" style="display: none;">
-                        <h2>Hypothalamus Controls</h2>
+                        <h2 data-lang-key="hypothalamusControls"></h2>
                         <div id="dopamine-control">
-                            <label for="dopamine-slider">Dopamine:</label>
+                            <label for="dopamine-slider" data-lang-key="dopamine"></label>
                             <input type="range" id="dopamine-slider" min="0" max="100" value="0">
                             <span id="dopamine-level-display">0</span>
                         </div>
                         <div id="gaba-control">
-                            <label for="gaba-slider">GABA:</label>
+                            <label for="gaba-slider" data-lang-key="gaba"></label>
                             <input type="range" id="gaba-slider" min="0" max="100" value="0">
                             <span id="gaba-level-display">0</span>
                         </div>
