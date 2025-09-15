@@ -210,11 +210,50 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 5. UI MANAGER OBJECT ---
     const UIManager = {
         logMessage(message, type = 'log-info') { if (!infoBannerDOM) return; while (infoBannerDOM.childNodes.length >= MAX_LOG_MESSAGES) { infoBannerDOM.removeChild(infoBannerDOM.lastChild); } const el = document.createElement('p'); el.textContent = `[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${message}`; el.className = type; infoBannerDOM.insertBefore(el, infoBannerDOM.firstChild); infoBannerDOM.scrollTop = 0; },
-        updateNeuronDisplay() { if (neuronsDisplayDOM) { neuronsDisplayDOM.textContent = `Neurons: ${Math.floor(gameState.neurons)}`; } },
-        updatePsychbuckDisplay(rate) { if (psychbucksDisplayDOM) psychbucksDisplayDOM.textContent = `Psychbucks: ${Math.floor(gameState.psychbucks)} | Passive: ${rate.toFixed(1)}/s`; },
-        updateOpsDisplay() { if (opsDisplayDOM) opsDisplayDOM.textContent = `Ops: ${Math.floor(gameState.mindOps)}`; },
-        updateIQDisplay() { if (iqDisplayDOM) { const act = gameState.totalNeuronsGenerated + gameState.neuronsSpentOnBrainUpgrades + 1; const iq = BASE_IQ + Math.log10(act) * IQ_SCALE_FACTOR; iqDisplayDOM.textContent = `IQ: ${Math.floor(iq)}`; } },
-        updateNeuroFuelDisplay() { if (neurofuelCountDOM && neurofuelCostDOM) { neurofuelCountDOM.textContent = Math.floor(gameState.neuroFuel); neurofuelCostDOM.textContent = Math.ceil(gameState.neuroFuelCost); } if(buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.disabled = gameState.psychbucks < gameState.neuroFuelCost; if(document.getElementById('neurofuel-display')) document.getElementById('neurofuel-display').textContent = `Fuel: ${Math.floor(gameState.neuroFuel)}`; },
+        updateNeuronDisplay() {
+            if (neuronsDisplayDOM) {
+                neuronsDisplayDOM.textContent = LanguageManager.getPhrase('stats.neurons', gameState.currentBrainLevel, {
+                    value: Math.floor(gameState.neurons)
+                });
+            }
+        },
+        updatePsychbuckDisplay(rate) {
+            if (psychbucksDisplayDOM) {
+                psychbucksDisplayDOM.textContent = LanguageManager.getPhrase('stats.psychbucks', gameState.currentBrainLevel, {
+                    value: Math.floor(gameState.psychbucks),
+                    rate: rate.toFixed(1)
+                });
+            }
+        },
+        updateOpsDisplay() {
+            if (opsDisplayDOM) {
+                opsDisplayDOM.textContent = LanguageManager.getPhrase('stats.ops', gameState.currentBrainLevel, {
+                    value: Math.floor(gameState.mindOps)
+                });
+            }
+        },
+        updateIQDisplay() {
+            if (iqDisplayDOM) {
+                const act = gameState.totalNeuronsGenerated + gameState.neuronsSpentOnBrainUpgrades + 1;
+                const iq = BASE_IQ + Math.log10(act) * IQ_SCALE_FACTOR;
+                iqDisplayDOM.textContent = LanguageManager.getPhrase('stats.iq', gameState.currentBrainLevel, {
+                    value: Math.floor(iq)
+                });
+            }
+        },
+        updateNeuroFuelDisplay() {
+            if (neurofuelCountDOM && neurofuelCostDOM) {
+                neurofuelCountDOM.textContent = Math.floor(gameState.neuroFuel);
+                neurofuelCostDOM.textContent = Math.ceil(gameState.neuroFuelCost);
+            }
+            if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.disabled = gameState.psychbucks < gameState.neuroFuelCost;
+            const fuelDisplayDOM = document.getElementById('neurofuel-display');
+            if (fuelDisplayDOM) {
+                fuelDisplayDOM.textContent = LanguageManager.getPhrase('stats.fuel', gameState.currentBrainLevel, {
+                    value: Math.floor(gameState.neuroFuel)
+                });
+            }
+        },
         updateAnxietyDisplay() { if (!anxietyStatusDisplayDOM) return; const ax = AnxietySystem.getAnxietyInfo(); let txt = `Anxiety: Normal (${ax.meter.toFixed(0)}%)`, clr = "green"; if (ax.isAttackActive){txt="Status: ANXIETY ATTACK!";clr="red";} else if (ax.activeStimuliCount>0 && ax.isAmygdalaSystemActive){txt=`Anxiety: Stimuli! (${ax.meter.toFixed(0)}%)`;clr="purple";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD){txt=`Anxiety: CRITICAL (${ax.meter.toFixed(0)}%)`;clr="orange";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD/2){txt=`Anxiety: Elevated (${ax.meter.toFixed(0)}%)`;clr="#CCCC00";} else if (ax.meter>0){txt=`Anxiety: Moderate (${ax.meter.toFixed(0)}%)`;clr="yellowgreen";} anxietyStatusDisplayDOM.textContent=txt; anxietyStatusDisplayDOM.style.color=clr;},
         updateQuestionAreaUIVisibility() { if (!questionAreaSectionDOM) {this.logMessage("Q Area DOM missing!","log-warning"); return;} if(gameState.questionsActuallyUnlocked){questionAreaSectionDOM.style.display='';this.logMessage("Q area VISIBLE.","log-info"); if(QuestionSystem.getCurrentQuestionIndex()===-1){this.logMessage("UIManager: Triggering QS loadNextQ.","log-info");QuestionSystem.loadNextQuestion();}}else{questionAreaSectionDOM.style.display='none';if(questionTextElementDOM)questionTextElementDOM.textContent="Upgrade brain for Qs.";if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML='';this.clearFeedbackAreas();this.logMessage("Q area HIDDEN.","log-info");}},
         displayQuestion(qData) {
