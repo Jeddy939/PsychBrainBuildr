@@ -83,10 +83,42 @@ export const LanguageManager = {
       "Chill Chemical:",
       "GABA:",
       "Gamma-Aminobutyric Acid:"
-    ]
+    ],
+    stats: {
+      neurons: [
+        "Neurons: {value}",
+        "Brain Bits: {value}",
+        "Neurons: {value}",
+        "Cortical Units: {value}"
+      ],
+      psychbucks: [
+        "Psychbucks: {value} | Passive: {rate}/s",
+        "Mind Money: {value} | Passive: {rate}/s",
+        "Psychbucks: {value} | Passive: {rate}/s",
+        "Cerebral Cash: {value} | Passive: {rate}/s"
+      ],
+      ops: [
+        "Ops: {value}",
+        "Mind Ops: {value}",
+        "Ops: {value}",
+        "Cognitive Ops: {value}"
+      ],
+      iq: [
+        "IQ: {value}",
+        "Brain Power: {value}",
+        "IQ: {value}",
+        "Intellect: {value}"
+      ],
+      fuel: [
+        "Fuel: {value}",
+        "Brain Fuel: {value}",
+        "Fuel: {value}",
+        "Cognitive Fuel: {value}"
+      ]
+    }
   },
   getPhrase(key, level = 2, params = {}) {
-    const variants = this.phrases[key];
+    const variants = key.split('.').reduce((obj, k) => (obj && obj[k]) ? obj[k] : undefined, this.phrases);
     let phrase = variants ? (variants[level] ?? variants[2]) : "";
     return phrase.replace(/\{(\w+)\}/g, (_, k) => params[k] ?? `{${k}}`);
   },
@@ -95,5 +127,8 @@ export const LanguageManager = {
       const key = el.getAttribute('data-lang-key');
       el.textContent = this.getPhrase(key, level);
     });
+    if (window.GameAPI && typeof window.GameAPI.updateDisplays === 'function') {
+      window.GameAPI.updateDisplays();
+    }
   }
 };
