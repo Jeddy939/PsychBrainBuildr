@@ -78,7 +78,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             if(typeof p.effect === 'function') p.effect.call(p);
             p.purchased = true;
             gameState.purchasedProjects.push(id);
-            UIManager.logMessage(`Project completed: ${p.title}`, 'log-upgrade');
+            UIManager.logMessage('logs.projectCompleted', { title: p.title }, 'log-upgrade');
             this.renderProjects();
             UIManager.updateAllDisplays();
         },
@@ -170,7 +170,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- Upgrade Action Functions ---
     function biggerBrain1Action() {
-        UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info");
+        UIManager.logMessage('logs.biggerBrain1Action', {}, 'log-info');
         gameState.currentBrainLevel = 1;
         gameState.neuroFuelCost = calculateNextNeuroFuelCost();
         UIManager.callUpdateBrainVisual();
@@ -185,7 +185,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             neuronProliferationAreaDOM.style.display = 'block';
             UpgradeSystem.renderNeuronProliferationUpgrades();
         }
-        UIManager.logMessage("Brain Growth I: Easy Qs & Proliferation unlocked.", "log-unlock");
+        UIManager.logMessage('logs.brainGrowth1Unlocked', {}, 'log-unlock');
     }
 
     function biggerBrain2Action() {
@@ -195,7 +195,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         LanguageManager.apply(gameState.currentBrainLevel);
         QuestionSystem.unlockDifficultyLevel(1);
         if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block';
-        UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock");
+        UIManager.logMessage('logs.brainGrowth2Unlocked', {}, 'log-unlock');
     }
 
     function biggerBrain3Action() {
@@ -205,14 +205,14 @@ document.addEventListener('DOMContentLoaded', async () => {
         LanguageManager.apply(gameState.currentBrainLevel);
         QuestionSystem.unlockDifficultyLevel(2);
         startIrregularSnacks();
-        UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock");
+        UIManager.logMessage('logs.brainGrowth3Unlocked', {}, 'log-unlock');
         UpgradeSystem.renderCoreUpgrades();
     }
 
     function amygdalaActivationAction() {
         gameState.passiveNeuronsPerSecond = (gameState.passiveNeuronsPerSecond > 0 ? gameState.passiveNeuronsPerSecond : 0.1) * 2;
         AnxietySystem.activateAmygdala();
-        UIManager.logMessage("Amygdala activated! Production boosted.", "log-unlock");
+        UIManager.logMessage('logs.amygdalaActivated', {}, 'log-unlock');
         /* UIManager.updateAllDisplays(); // Called by purchaseUpgrade */
     }
 
@@ -222,7 +222,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         gameState.unlockedGames.flappyFreud = true;
         gameState.unlockedGames.feedSundgren = true;
         UIManager.updateMinigameButtons();
-        UIManager.logMessage("Pleasure center engaged! Minigames available.", 'log-unlock');
+        UIManager.logMessage('logs.pleasureCenterUnlocked', {}, 'log-unlock');
     }
 
     function prolifFactoryAction() {
@@ -287,7 +287,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 5. UI MANAGER OBJECT ---
     const UIManager = {
-        logMessage(message, type = 'log-info') { if (!infoBannerDOM) return; while (infoBannerDOM.childNodes.length >= MAX_LOG_MESSAGES) { infoBannerDOM.removeChild(infoBannerDOM.lastChild); } const el = document.createElement('p'); el.textContent = `[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${message}`; el.className = type; infoBannerDOM.insertBefore(el, infoBannerDOM.firstChild); infoBannerDOM.scrollTop = 0; },
+        logMessage(key, params = {}, type = 'log-info') { if (!infoBannerDOM) return; const message = LanguageManager.getPhrase(key, gameState.currentBrainLevel, params) || key; while (infoBannerDOM.childNodes.length >= MAX_LOG_MESSAGES) { infoBannerDOM.removeChild(infoBannerDOM.lastChild); } const el = document.createElement('p'); el.textContent = `[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${message}`; el.className = type; infoBannerDOM.insertBefore(el, infoBannerDOM.firstChild); infoBannerDOM.scrollTop = 0; },
         updateNeuronDisplay() {
             if (neuronsDisplayDOM) {
                 neuronsDisplayDOM.textContent = LanguageManager.getPhrase('stats.neurons', gameState.currentBrainLevel, {
@@ -333,7 +333,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             }
         },
         updateAnxietyDisplay() { if (!anxietyStatusDisplayDOM) return; const ax = AnxietySystem.getAnxietyInfo(); let txt = `Anxiety: Normal (${ax.meter.toFixed(0)}%)`, clr = "green"; if (ax.isAttackActive){txt="Status: ANXIETY ATTACK!";clr="red";} else if (ax.activeStimuliCount>0 && ax.isAmygdalaSystemActive){txt=`Anxiety: Stimuli! (${ax.meter.toFixed(0)}%)`;clr="purple";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD){txt=`Anxiety: CRITICAL (${ax.meter.toFixed(0)}%)`;clr="orange";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD/2){txt=`Anxiety: Elevated (${ax.meter.toFixed(0)}%)`;clr="#CCCC00";} else if (ax.meter>0){txt=`Anxiety: Moderate (${ax.meter.toFixed(0)}%)`;clr="yellowgreen";} anxietyStatusDisplayDOM.textContent=txt; anxietyStatusDisplayDOM.style.color=clr;},
-        updateQuestionAreaUIVisibility() { if (!questionAreaSectionDOM) {this.logMessage("Q Area DOM missing!","log-warning"); return;} if(gameState.questionsActuallyUnlocked){questionAreaSectionDOM.style.display='';this.logMessage("Q area VISIBLE.","log-info"); if(QuestionSystem.getCurrentQuestionIndex()===-1){this.logMessage("UIManager: Triggering QS loadNextQ.","log-info");QuestionSystem.loadNextQuestion();}}else{questionAreaSectionDOM.style.display='none';if(questionTextElementDOM)questionTextElementDOM.textContent="Upgrade brain for Qs.";if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML='';this.clearFeedbackAreas();this.logMessage("Q area HIDDEN.","log-info");}},
+        updateQuestionAreaUIVisibility() { if (!questionAreaSectionDOM) {this.logMessage('logs.questionAreaMissing', {}, 'log-warning'); return;} if(gameState.questionsActuallyUnlocked){questionAreaSectionDOM.style.display='';this.logMessage('logs.questionAreaVisible', {}, 'log-info'); if(QuestionSystem.getCurrentQuestionIndex()===-1){this.logMessage('logs.triggeringQuestionLoad', {}, 'log-info');QuestionSystem.loadNextQuestion();}}else{questionAreaSectionDOM.style.display='none';if(questionTextElementDOM)questionTextElementDOM.textContent="Upgrade brain for Qs.";if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML='';this.clearFeedbackAreas();this.logMessage('logs.questionAreaHidden', {}, 'log-info');}},
         displayQuestion(qData) {
             if(questionTextElementDOM) questionTextElementDOM.textContent = qData.text;
             if(answerOptionsElementDOM) answerOptionsElementDOM.innerHTML = '';
@@ -392,21 +392,21 @@ document.addEventListener('DOMContentLoaded', async () => {
         difficultyUnlocked: -1,
         currentStreakCount: 0,
         currentStreakBonus: 0,
-        init(questionsSourceArray) { this.allQuestionsData = questionsSourceArray || []; this.currentQuestionIndex = -1; this.difficultyUnlocked = -1; this.currentStreakCount = 0; this.currentStreakBonus = 0; UIManager.logMessage("QuestionSystem Initialized (" + this.allQuestionsData.length + " Qs).", "log-info"); if (this.allQuestionsData.length === 0 && questionsSourceArray && questionsSourceArray.length > 0) { UIManager.logMessage("QS WARNING: questionsSourceArray had items, but allQuestionsData is empty post-assignment!", "log-warning"); } else if (this.allQuestionsData.length === 0) { UIManager.logMessage("QS WARNING: Initialized with an empty questions array!", "log-warning"); } },
+        init(questionsSourceArray) { this.allQuestionsData = questionsSourceArray || []; this.currentQuestionIndex = -1; this.difficultyUnlocked = -1; this.currentStreakCount = 0; this.currentStreakBonus = 0; UIManager.logMessage('logs.questionSystemInitialized', { count: this.allQuestionsData.length }, 'log-info'); if (this.allQuestionsData.length === 0 && questionsSourceArray && questionsSourceArray.length > 0) { UIManager.logMessage('logs.questionsSourceMismatch', {}, 'log-warning'); } else if (this.allQuestionsData.length === 0) { UIManager.logMessage('logs.questionsEmpty', {}, 'log-warning'); } },
         getCurrentQuestionIndex() { return this.currentQuestionIndex; },
         setOverallUnlockState(isUnlocked) { gameState.questionsActuallyUnlocked = isUnlocked; UIManager.updateQuestionAreaUIVisibility(); },
-        unlockDifficultyLevel(level) { this.difficultyUnlocked = Math.max(this.difficultyUnlocked, level); UIManager.logMessage(`${level === 0 ? 'Easy' : level === 1 ? 'Medium' : 'Hard'} questions available.`, 'log-info'); if (gameState.questionsActuallyUnlocked && this.currentQuestionIndex === -1) this.loadNextQuestion(); },
+        unlockDifficultyLevel(level) { this.difficultyUnlocked = Math.max(this.difficultyUnlocked, level); const difficulty = level === 0 ? 'Easy' : level === 1 ? 'Medium' : 'Hard'; UIManager.logMessage('logs.questionsAvailable', { difficulty }, 'log-info'); if (gameState.questionsActuallyUnlocked && this.currentQuestionIndex === -1) this.loadNextQuestion(); },
         loadNextQuestion() {
             if (!gameState.questionsActuallyUnlocked) { UIManager.updateQuestionAreaUIVisibility(); return; }
             const filteredQuestions = this.allQuestionsData.filter(q => q.difficulty <= this.difficultyUnlocked && (this.currentQuestionIndex === -1 || q.id !== this.allQuestionsData[this.currentQuestionIndex]?.id));
             if (filteredQuestions.length === 0) {
                 if(questionTextElementDOM) questionTextElementDOM.textContent = (this.difficultyUnlocked < 2) ? "More questions at higher brain levels." : "All questions answered for this difficulty!";
-                if(answerOptionsElementDOM) answerOptionsElementDOM.innerHTML = ''; UIManager.clearFeedbackAreas(); this.currentQuestionIndex = -1; UIManager.logMessage("QS: No suitable questions found.", "log-info"); return;
+                if(answerOptionsElementDOM) answerOptionsElementDOM.innerHTML = ''; UIManager.clearFeedbackAreas(); this.currentQuestionIndex = -1; UIManager.logMessage('logs.noSuitableQuestions', {}, 'log-info'); return;
             }
             const randomIndex = Math.floor(Math.random() * filteredQuestions.length); const nextQuestionData = filteredQuestions[randomIndex];
             this.currentQuestionIndex = this.allQuestionsData.findIndex(q => q.id === nextQuestionData.id);
-            if (this.currentQuestionIndex === -1) { console.error("QS Error finding Q by ID: ", nextQuestionData); UIManager.logMessage("CRIT QS: Error find Q by ID.", "log-warning"); if(questionTextElementDOM) questionTextElementDOM.textContent = "Error loading Q data."; if(answerOptionsElementDOM) answerOptionsElementDOM.innerHTML = ''; return; }
-            UIManager.displayQuestion(this.allQuestionsData[this.currentQuestionIndex]); UIManager.clearFeedbackAreas(); UIManager.logMessage(`QS Loaded Q ID ${this.allQuestionsData[this.currentQuestionIndex].id}`, "log-info");
+            if (this.currentQuestionIndex === -1) { console.error("QS Error finding Q by ID: ", nextQuestionData); UIManager.logMessage('logs.questionIdError', {}, 'log-warning'); if(questionTextElementDOM) questionTextElementDOM.textContent = "Error loading Q data."; if(answerOptionsElementDOM) answerOptionsElementDOM.innerHTML = ''; return; }
+            UIManager.displayQuestion(this.allQuestionsData[this.currentQuestionIndex]); UIManager.clearFeedbackAreas(); UIManager.logMessage('logs.questionLoaded', { id: this.allQuestionsData[this.currentQuestionIndex].id }, 'log-info');
         },
         handleAnswer(selectedIndex) {
             if (!gameState.questionsActuallyUnlocked || this.currentQuestionIndex === -1 || !this.allQuestionsData[this.currentQuestionIndex]) return;
@@ -419,11 +419,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 gameState.psychbucks += actualPsychbucksEarned;
                 UIManager.displayFeedback(`Correct!`, 'correct'); this.currentStreakCount++;
                 UIManager.displayFeedback(this.currentStreakCount > 1 ? `Streak: ${this.currentStreakCount}! +${this.currentStreakBonus} bonus. Total: ${actualPsychbucksEarned} PB!` : `Streak Started! Total: ${actualPsychbucksEarned} PB!`, 'streak-bonus');
-                UIManager.logMessage(`Correct: +${actualPsychbucksEarned} PB (Streak: ${this.currentStreakCount})`, 'log-info'); this.currentStreakBonus += baseReward;
+                UIManager.logMessage('logs.questionCorrect', { reward: actualPsychbucksEarned, streak: this.currentStreakCount }, 'log-info'); this.currentStreakBonus += baseReward;
             } else {
                 UIManager.displayFeedback(`Incorrect. Correct was: ${question.options[question.correctAnswerIndex]}`, 'incorrect');
                 UIManager.displayFeedback(this.currentStreakCount > 0 ? `Streak Broken! (Was ${this.currentStreakCount})` : "", 'streak-broken');
-                if(this.currentStreakCount > 0) UIManager.logMessage(`Incorrect. Streak of ${this.currentStreakCount} broken.`, 'log-warning'); else UIManager.logMessage(`Incorrect.`, 'log-warning');
+                if(this.currentStreakCount > 0) UIManager.logMessage('logs.questionIncorrectBreak', { streak: this.currentStreakCount }, 'log-warning'); else UIManager.logMessage('logs.questionIncorrect', {}, 'log-warning');
                 this.currentStreakCount = 0; this.currentStreakBonus = 0;
                 if (gameState.currentBrainLevel >= 2 && !AnxietySystem.isAttackCurrentlyActive()) {
                     let anxietyIncrease = 5 + (question.difficulty === 2 ? 5 : (question.difficulty === 1 ? 2 : 0));
@@ -437,7 +437,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // --- 7. UPGRADE SYSTEM MODULE ---
     const UpgradeSystem = {
         coreUpgrades: [], neuronProliferationUpgrades: [],
-        init(coreData, proliferationData) { this.coreUpgrades = coreData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); this.neuronProliferationUpgrades = proliferationData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); UIManager.logMessage("UpgradeSystem Initialized. Core: " + this.coreUpgrades.length + ", Prolif: " + this.neuronProliferationUpgrades.length, "log-info"); },
+        init(coreData, proliferationData) { this.coreUpgrades = coreData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); this.neuronProliferationUpgrades = proliferationData.map(u => ({ ...u, effectApplied: u.effectApplied || false })); UIManager.logMessage('logs.upgradeSystemInit', { coreCount: this.coreUpgrades.length, prolifCount: this.neuronProliferationUpgrades.length }, 'log-info'); },
         getFilteredUpgrades(type) {
             const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades;
             return source.filter(upg => {
@@ -450,11 +450,11 @@ document.addEventListener('DOMContentLoaded', async () => {
                 return true;
             });
         },
-        renderCoreUpgrades() { UIManager.logMessage("[UpgradeSystem] renderCoreUpgrades called.", "log-info"); const upgs = this.getFilteredUpgrades("core"); if (!upgradesListElementDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: upgradesListElementDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, upgradesListElementDOM, "core"); this.updateUpgradeButtons(); },
-        renderNeuronProliferationUpgrades() { UIManager.logMessage("[UpgradeSystem] renderNeuronProliferationUpgrades called.", "log-info"); if (neuronProliferationAreaDOM && neuronProliferationAreaDOM.style.display !== 'none') { const upgs = this.getFilteredUpgrades("proliferation"); if (!neuronProliferationUpgradesListDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: neuronProliferationUpgradesListDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, neuronProliferationUpgradesListDOM, "proliferation"); this.updateUpgradeButtons(); } else { UIManager.logMessage("[UpgradeSystem] Neuron prolif area hidden, not rendering.", "log-info"); } },
+        renderCoreUpgrades() { UIManager.logMessage('logs.renderCoreUpgrades', {}, 'log-info'); const upgs = this.getFilteredUpgrades("core"); if (!upgradesListElementDOM) { UIManager.logMessage('logs.upgradesListMissing', {}, 'log-warning'); return; } UIManager.renderUpgradeList(upgs, upgradesListElementDOM, "core"); this.updateUpgradeButtons(); },
+        renderNeuronProliferationUpgrades() { UIManager.logMessage('logs.renderProliferationUpgrades', {}, 'log-info'); if (neuronProliferationAreaDOM && neuronProliferationAreaDOM.style.display !== 'none') { const upgs = this.getFilteredUpgrades("proliferation"); if (!neuronProliferationUpgradesListDOM) { UIManager.logMessage('logs.proliferationListMissing', {}, 'log-warning'); return; } UIManager.renderUpgradeList(upgs, neuronProliferationUpgradesListDOM, "proliferation"); this.updateUpgradeButtons(); } else { UIManager.logMessage('logs.proliferationAreaHidden', {}, 'log-info'); } },
         purchaseUpgrade(upgradeId, upgradeType) {
             let upg; const srcArr = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; upg = srcArr.find(u => u.id === upgradeId);
-            if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; } if (upg.effectApplied) { UIManager.logMessage(`${upg.name} already purchased.`, "log-info"); return; }
+            if (!upg) { UIManager.logMessage('logs.upgradeNotFound', { id: upgradeId }, 'log-warning'); return; } if (upg.effectApplied) { UIManager.logMessage('logs.upgradeAlreadyPurchased', { name: upg.name }, 'log-info'); return; }
             let canAfford = (upg.costCurrency === "neurons" && gameState.neurons >= upg.cost && (!upg.psychbuckCost || gameState.psychbucks >= upg.psychbuckCost)) || (upg.costCurrency === "psychbucks" && gameState.psychbucks >= upg.cost);
             if (canAfford) {
                 const prevBrainLvl = gameState.currentBrainLevel;
@@ -478,13 +478,13 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const origUpgData=(upgradeType==="core"?coreUpgrades_raw_data:neuronProliferationUpgrades_raw_data).find(u=>u.id===upgradeId);
                 if(origUpgData&&typeof origUpgData.action==='function'){origUpgData.action();}
                 if(prevBrainLvl!==gameState.currentBrainLevel) ProjectSystem.renderProjects();
-                UIManager.logMessage(`Upgrade: ${upg.name} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
+                UIManager.logMessage('logs.upgradeAcquired', { name: upg.name }, 'log-upgrade'); UIManager.updateAllDisplays();
                 if(upg.type=="brain") UIManager.playBrainUpgradeAnimation();
                 if(upgradeType==="core")this.renderCoreUpgrades();else this.renderNeuronProliferationUpgrades();
-            } else { UIManager.logMessage(`Not enough for ${upg.name}.`, "log-warning"); }
+            } else { UIManager.logMessage('logs.upgradeInsufficient', { name: upg.name }, 'log-warning'); }
         },
         getUpgradeData(type, brainLevelToFind) { const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; return source.find(upg => upg.type === 'brain' && (upg.id.match(/biggerBrain(\d+)/) && parseInt(upg.id.match(/biggerBrain(\d+)/)[1]) === brainLevelToFind)); },
-        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; UIManager.logMessage(`Reverted purchase status for ${upg.name}.`, "log-info"); } },
+        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; UIManager.logMessage('logs.upgradeReverted', { name: upg.name }, 'log-info'); } },
         updateUpgradeButtons() { const allBtns=document.querySelectorAll('#upgrades-list button[data-upgrade-id],#neuron-proliferation-upgrades-list button[data-upgrade-id]');allBtns.forEach(btn=>{const uid=btn.dataset.upgradeId;const utype=btn.dataset.upgradeType;let upg=utype==="core"?this.coreUpgrades.find(u=>u.id===uid):this.neuronProliferationUpgrades.find(u=>u.id===uid);if(upg&&!upg.effectApplied){let canAfford=(upg.costCurrency==="neurons"&&gameState.neurons>=upg.cost&&(!upg.psychbuckCost||gameState.psychbucks>=upg.psychbuckCost))||(upg.costCurrency==="psychbucks"&&gameState.psychbucks>=upg.cost);UIManager.updateSingleUpgradeButton(btn,canAfford);}else if(upg&&upg.effectApplied){UIManager.updateSingleUpgradeButton(btn,false);}else{UIManager.updateSingleUpgradeButton(btn,false);}}); }
     };
 
@@ -492,31 +492,31 @@ document.addEventListener('DOMContentLoaded', async () => {
     const AnxietySystem = {
         meter: 0, timeAtHighDopamine: 0, isAttackActive: false, isAmygdalaOnline: false, scaryStimuliIntervalId: null, activeStimuliDOMElements: [],
         BASE_ANXIETY_INCREASE_FACTOR: 0.1, BASE_ANXIETY_DECREASE_FACTOR: 0.5,
-        init() {this.meter=0;this.timeAtHighDopamine=0;this.isAttackActive=false;this.isAmygdalaOnline=false;if(this.scaryStimuliIntervalId)clearInterval(this.scaryStimuliIntervalId);this.scaryStimuliIntervalId=null;this.activeStimuliDOMElements.forEach(el=>el.remove());this.activeStimuliDOMElements=[];UIManager.logMessage("AnxietySystem Initialized.","log-info");},
+        init() {this.meter=0;this.timeAtHighDopamine=0;this.isAttackActive=false;this.isAmygdalaOnline=false;if(this.scaryStimuliIntervalId)clearInterval(this.scaryStimuliIntervalId);this.scaryStimuliIntervalId=null;this.activeStimuliDOMElements.forEach(el=>el.remove());this.activeStimuliDOMElements=[];UIManager.logMessage('logs.anxietyInit', {}, 'log-info');},
         getAnxietyInfo(){return{meter:this.meter,isAttackActive:this.isAttackActive,activeStimuliCount:this.activeStimuliDOMElements.length,isAmygdalaSystemActive:this.isAmygdalaOnline};},
         isAttackCurrentlyActive(){return this.isAttackActive;},
         isAmygdalaFunctioning(){return this.isAmygdalaOnline;}, // Changed from isAmygdalaSystemActive to isAmygdalaOnline
-        activateAmygdala(){if(this.isAmygdalaOnline)return;this.isAmygdalaOnline=true;this._startScaryStimuliTimer();UIManager.logMessage("AnxietySystem: Amygdala online.","log-info");},
-        increaseMeter(amount){if(!this.isAttackActive){this.meter=Math.min(MAX_ANXIETY,this.meter+amount);UIManager.logMessage(`Anxiety meter stress: +${amount}.`,'log-info');}},
-        update(){if(this.isAttackActive){if(gameState.gabaLevel>0){this.meter=Math.max(0,this.meter-(gameState.gabaLevel/20));if(this.meter<=0){this.isAttackActive=false;this.timeAtHighDopamine=0;UIManager.logMessage("Anxiety subsided.","log-info");}}return;}let currentAnxietyChange=0;if(gameState.currentBrainLevel>=2&&gameState.dopamineLevel>ANXIETY_THRESHOLD&&(gameState.gabaLevel<gameState.dopamineLevel*0.4||gameState.gabaLevel<20)){this.timeAtHighDopamine++;currentAnxietyChange=(gameState.dopamineLevel/25)*this.BASE_ANXIETY_INCREASE_FACTOR;if(this.isAmygdalaOnline&&this.activeStimuliDOMElements.length>0){currentAnxietyChange*=2;}}else{this.timeAtHighDopamine=Math.max(0,this.timeAtHighDopamine-1);currentAnxietyChange=-(this.BASE_ANXIETY_DECREASE_FACTOR+(gameState.gabaLevel/15));}this.meter=Math.min(MAX_ANXIETY,Math.max(0,this.meter+currentAnxietyChange));if(this.timeAtHighDopamine>=ANXIETY_TIME_LIMIT&&this.meter>ANXIETY_SUSTAINED_THRESHOLD&&!this.isAttackActive){this._triggerAttack();}},
-        _triggerAttack(){if(this.isAttackActive)return;this.isAttackActive=true;this.timeAtHighDopamine=0;UIManager.logMessage("ANXIETY ATTACK! Production halted. Stability compromised!","log-warning");gameState.neurons=Math.floor(gameState.neurons*0.8);let prevBrainLvl=gameState.currentBrainLevel;gameState.currentBrainLevel=Math.max(0,gameState.currentBrainLevel-1);if(prevBrainLvl>gameState.currentBrainLevel){const downgradedUpg=UpgradeSystem.getUpgradeData("core",prevBrainLvl);if(downgradedUpg){UpgradeSystem.markUpgradeNotApplied(downgradedUpg.id,"core");UIManager.logMessage(`Stability lost. ${downgradedUpg.name} requires reinforcement.`,"log-warning");}}UIManager.callUpdateBrainVisual();LanguageManager.apply(gameState.currentBrainLevel);UpgradeSystem.renderCoreUpgrades();UIManager.updateAnxietyDisplay();UIManager.updateAllDisplays();if(prevBrainLvl>gameState.currentBrainLevel)ProjectSystem.renderProjects();},
-        _startScaryStimuliTimer(){if(this.scaryStimuliIntervalId)clearInterval(this.scaryStimuliIntervalId);this.scaryStimuliIntervalId=setInterval(()=>this._triggerScaryStimuliBatch(),SCARY_STIMULI_INTERVAL_MS);UIManager.logMessage("Amygdala awareness protocol initiated.","log-warning");},
-        _triggerScaryStimuliBatch(){if(!this.isAmygdalaOnline||document.hidden)return;this.activeStimuliDOMElements.forEach(sD=>sD.remove());this.activeStimuliDOMElements=[];const numS=Math.floor(Math.random()*3)+3;UIManager.logMessage(`Awareness: ${numS} abrupt stimuli!`,"log-warning");for(let i=0;i<numS;i++)setTimeout(()=>this._createScaryStimulus(),i*150);},
+        activateAmygdala(){if(this.isAmygdalaOnline)return;this.isAmygdalaOnline=true;this._startScaryStimuliTimer();UIManager.logMessage('logs.anxietyAmygdalaOnline', {}, 'log-info');},
+        increaseMeter(amount){if(!this.isAttackActive){this.meter=Math.min(MAX_ANXIETY,this.meter+amount);UIManager.logMessage('logs.anxietyStress', { amount }, 'log-info');}},
+        update(){if(this.isAttackActive){if(gameState.gabaLevel>0){this.meter=Math.max(0,this.meter-(gameState.gabaLevel/20));if(this.meter<=0){this.isAttackActive=false;this.timeAtHighDopamine=0;UIManager.logMessage('logs.anxietySubsided', {}, 'log-info');}}return;}let currentAnxietyChange=0;if(gameState.currentBrainLevel>=2&&gameState.dopamineLevel>ANXIETY_THRESHOLD&&(gameState.gabaLevel<gameState.dopamineLevel*0.4||gameState.gabaLevel<20)){this.timeAtHighDopamine++;currentAnxietyChange=(gameState.dopamineLevel/25)*this.BASE_ANXIETY_INCREASE_FACTOR;if(this.isAmygdalaOnline&&this.activeStimuliDOMElements.length>0){currentAnxietyChange*=2;}}else{this.timeAtHighDopamine=Math.max(0,this.timeAtHighDopamine-1);currentAnxietyChange=-(this.BASE_ANXIETY_DECREASE_FACTOR+(gameState.gabaLevel/15));}this.meter=Math.min(MAX_ANXIETY,Math.max(0,this.meter+currentAnxietyChange));if(this.timeAtHighDopamine>=ANXIETY_TIME_LIMIT&&this.meter>ANXIETY_SUSTAINED_THRESHOLD&&!this.isAttackActive){this._triggerAttack();}},
+        _triggerAttack(){if(this.isAttackActive)return;this.isAttackActive=true;this.timeAtHighDopamine=0;UIManager.logMessage('logs.anxietyAttack', {}, 'log-warning');gameState.neurons=Math.floor(gameState.neurons*0.8);let prevBrainLvl=gameState.currentBrainLevel;gameState.currentBrainLevel=Math.max(0,gameState.currentBrainLevel-1);if(prevBrainLvl>gameState.currentBrainLevel){const downgradedUpg=UpgradeSystem.getUpgradeData("core",prevBrainLvl);if(downgradedUpg){UpgradeSystem.markUpgradeNotApplied(downgradedUpg.id,"core");UIManager.logMessage('logs.anxietyStabilityLost', { name: downgradedUpg.name }, 'log-warning');}}UIManager.callUpdateBrainVisual();LanguageManager.apply(gameState.currentBrainLevel);UpgradeSystem.renderCoreUpgrades();UIManager.updateAnxietyDisplay();UIManager.updateAllDisplays();if(prevBrainLvl>gameState.currentBrainLevel)ProjectSystem.renderProjects();},
+        _startScaryStimuliTimer(){if(this.scaryStimuliIntervalId)clearInterval(this.scaryStimuliIntervalId);this.scaryStimuliIntervalId=setInterval(()=>this._triggerScaryStimuliBatch(),SCARY_STIMULI_INTERVAL_MS);UIManager.logMessage('logs.anxietyAwarenessProtocol', {}, 'log-warning');},
+        _triggerScaryStimuliBatch(){if(!this.isAmygdalaOnline||document.hidden)return;this.activeStimuliDOMElements.forEach(sD=>sD.remove());this.activeStimuliDOMElements=[];const numS=Math.floor(Math.random()*3)+3;UIManager.logMessage('logs.anxietyStimuliBatch', { count: numS }, 'log-warning');for(let i=0;i<numS;i++)setTimeout(()=>this._createScaryStimulus(),i*150);},
         _createScaryStimulus(){if(!scaryStimuliOverlayDOM)return;const sD=document.createElement('div');const sT=["DANGER!","FEAR!","WATCH OUT!","PANIC!","THREAT!","ALERT!","INTRUSION!"];sD.textContent=sT[Math.floor(Math.random()*sT.length)];sD.className='scary-stimulus-popup';const oW=scaryStimuliOverlayDOM.offsetWidth,oH=scaryStimuliOverlayDOM.offsetHeight,pW=150,pH=60;sD.style.left=`${Math.random()*Math.max(0,oW-pW)}px`;sD.style.top=`${Math.random()*Math.max(0,oH-pH)}px`;sD.style.opacity='0';sD.style.transform='scale(0.5)';sD.onclick=()=>this._dismissScaryStimulus(sD);this.activeStimuliDOMElements.push(sD);scaryStimuliOverlayDOM.appendChild(sD);setTimeout(()=>{sD.style.opacity='1';sD.style.transform='scale(1)';},50);},
-        _dismissScaryStimulus(sD){sD.style.opacity='0';sD.style.transform='scale(0.7)';setTimeout(()=>{try{sD.remove();this.activeStimuliDOMElements=this.activeStimuliDOMElements.filter(s=>s!==sD);if(this.activeStimuliDOMElements.length===0)UIManager.logMessage("Stimuli cleared. Focus returning.","log-info");}catch(e){console.error("Err dismiss stimulus:",e);}},300);}
+        _dismissScaryStimulus(sD){sD.style.opacity='0';sD.style.transform='scale(0.7)';setTimeout(()=>{try{sD.remove();this.activeStimuliDOMElements=this.activeStimuliDOMElements.filter(s=>s!==sD);if(this.activeStimuliDOMElements.length===0)UIManager.logMessage('logs.anxietyStimuliCleared', {}, 'log-info');}catch(e){console.error("Err dismiss stimulus:",e);}},300);}
     };
 
     // =======================================================================
     // 9. HELPER FUNCTIONS (Event Handlers, etc. - DEFINED BEFORE attachEventListeners and initGame)
     // =======================================================================
     function handleManualGeneration() {
-        if (AnxietySystem.isAttackCurrentlyActive()) { UIManager.logMessage("Brain recovering... clicking disabled (Anxiety Active).", "log-warning"); return; }
+        if (AnxietySystem.isAttackCurrentlyActive()) { UIManager.logMessage('logs.anxietyClickDisabled', {}, 'log-warning'); return; }
         const possible = Math.min(gameState.neuronsPerClick, gameState.neuroFuel / gameState.manualFuelMultiplier);
-        if(possible <= 0){ UIManager.logMessage('Out of NeuroFuel!', 'log-warning'); return; }
+        if(possible <= 0){ UIManager.logMessage('logs.outOfFuel', {}, 'log-warning'); return; }
         let neuronsBeforeClick = gameState.neurons; gameState.neurons += possible; gameState.totalNeuronsGenerated += possible;
         gameState.mindOps += possible * OPS_PER_NEURON;
         gameState.neuroFuel -= possible * gameState.manualFuelMultiplier;
-        UIManager.logMessage(`Neuron click: ${neuronsBeforeClick} -> ${gameState.neurons}`, "log-info");
+        UIManager.logMessage('logs.neuronClick', { before: neuronsBeforeClick, after: gameState.neurons }, 'log-info');
         UIManager.updateAllDisplays();
         if(!gameState.upgradesAreaUnlocked && gameState.neurons >= 10){
             if(contentWrapperDOM) contentWrapperDOM.style.display = 'flex';
@@ -531,10 +531,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameState.factoryCount += 1;
             gameState.passiveNeuronsPerSecond += FACTORY_PRODUCTION_RATE;
             gameState.factoryCost *= 1.15;
-            UIManager.logMessage(`Proliferation Factory purchased! Total: ${gameState.factoryCount}`, 'log-upgrade');
+            UIManager.logMessage('logs.factoryPurchased', { count: gameState.factoryCount }, 'log-upgrade');
             ProjectSystem.renderProjects();
         } else {
-            UIManager.logMessage('Not enough Psychbucks for factory.', 'log-warning');
+            UIManager.logMessage('logs.factoryInsufficient', {}, 'log-warning');
         }
         UIManager.updateAllDisplays();
         UpgradeSystem.renderNeuronProliferationUpgrades();
@@ -545,10 +545,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameState.psychbucks -= gameState.neuroFuelCost;
             const item = FOOD_OPTIONS[Math.floor(Math.random()*FOOD_OPTIONS.length)];
             gameState.neuroFuel += item.fuel;
-            UIManager.logMessage(`Purchased ${item.emoji} ${item.name}! (+${item.fuel} Fuel)`, 'log-upgrade');
+            UIManager.logMessage('logs.foodPurchased', { emoji: item.emoji, name: item.name, fuel: item.fuel }, 'log-upgrade');
             gameState.neuroFuelCost = calculateNextNeuroFuelCost();
         } else {
-            UIManager.logMessage('Not enough Psychbucks for food.', 'log-warning');
+            UIManager.logMessage('logs.foodInsufficient', {}, 'log-warning');
         }
         UIManager.updateAllDisplays();
     }
@@ -556,14 +556,14 @@ document.addEventListener('DOMContentLoaded', async () => {
     function startIntermittentFasting(){
         if(intermittentFastingIntervalId) return;
         intermittentFastingIntervalId = setInterval(handleBuyNeurofuel, 10000);
-        UIManager.logMessage('Intermittent Fasting activated: auto-buy every 10s.', 'log-info');
+        UIManager.logMessage('logs.fastingActivated', {}, 'log-info');
     }
 
     function stopIntermittentFasting(){
         if(!intermittentFastingIntervalId) return;
         clearInterval(intermittentFastingIntervalId);
         intermittentFastingIntervalId = null;
-        UIManager.logMessage('Intermittent Fasting stopped.', 'log-info');
+        UIManager.logMessage('logs.fastingStopped', {}, 'log-info');
     }
 
     function startIrregularSnacks(){
@@ -576,14 +576,14 @@ document.addEventListener('DOMContentLoaded', async () => {
             }, delay);
         };
         schedule();
-        UIManager.logMessage('Irregular Snacks activated.', 'log-info');
+        UIManager.logMessage('logs.snacksActivated', {}, 'log-info');
     }
 
     function stopIrregularSnacks(){
         if(!irregularSnacksTimeoutId) return;
         clearTimeout(irregularSnacksTimeoutId);
         irregularSnacksTimeoutId = null;
-        UIManager.logMessage('Irregular Snacks stopped.', 'log-info');
+        UIManager.logMessage('logs.snacksStopped', {}, 'log-info');
     }
     function handleDopamineSlider(event) { gameState.dopamineLevel = parseInt(event.target.value); if(dopamineLevelDisplayDOM) dopamineLevelDisplayDOM.textContent = gameState.dopamineLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
     function handleGabaSlider(event) { gameState.gabaLevel = parseInt(event.target.value); if(gabaLevelDisplayDOM) gabaLevelDisplayDOM.textContent = gameState.gabaLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
@@ -742,8 +742,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 11. EVENT LISTENERS ATTACHMENT
     // =======================================================================
     function attachEventListeners() {
-        if (clickButtonDOM) { clickButtonDOM.addEventListener('click', handleManualGeneration); UIManager.logMessage("Click listener ready.", "log-info"); }
-        else { console.error("clickButtonDOM is null."); UIManager.logMessage("ERR: Click button not found!", "log-warning"); }
+        if (clickButtonDOM) { clickButtonDOM.addEventListener('click', handleManualGeneration); UIManager.logMessage('logs.clickListenerReady', {}, 'log-info'); }
+        else { console.error("clickButtonDOM is null."); UIManager.logMessage('logs.clickButtonMissing', {}, 'log-warning'); }
         if (dopamineSliderDOM) dopamineSliderDOM.addEventListener('input', handleDopamineSlider); else console.warn("Dopamine slider not found.");
         if (gabaSliderDOM) gabaSliderDOM.addEventListener('input', handleGabaSlider); else console.warn("GABA slider not found.");
         if (buyFactoryBtnDOM) buyFactoryBtnDOM.addEventListener('click', handleBuyProliferationFactory);
@@ -775,17 +775,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     // 12. INIT GAME FUNCTION
     // =======================================================================
     async function initGame() {
-        UIManager.logMessage("Initializing Game...", "log-info");
+        UIManager.logMessage('logs.initializingGame', {}, 'log-info');
         try {
-            UIManager.logMessage("Fetching questions...", "log-info");
+            UIManager.logMessage('logs.fetchingQuestions', {}, 'log-info');
             const response = await fetch('questions.json');
             if (!response.ok) { throw new Error(`HTTP error! status: ${response.status} fetching questions.json`); }
             const fetchedQuestions = await response.json();
             QuestionSystem.init(fetchedQuestions);
-            UIManager.logMessage(`Fetched ${fetchedQuestions.length} questions.`, "log-info");
+            UIManager.logMessage('logs.questionsFetched', { count: fetchedQuestions.length }, 'log-info');
         } catch (error) {
             console.error("Failed to load questions.json:", error);
-            UIManager.logMessage("CRITICAL ERROR: Failed to load questions. Questions will not work.", "log-warning");
+            UIManager.logMessage('logs.questionsFetchFailed', {}, 'log-warning');
             QuestionSystem.init([]);
         }
         UpgradeSystem.init(coreUpgrades_raw_data, neuronProliferationUpgrades_raw_data);
@@ -797,7 +797,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.updateNeuroFuelDisplay();
         UIManager.updateAllDisplays();
         if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'flex';
-        UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
+        UIManager.logMessage('logs.welcome', {}, 'log-info');
         setInterval(gameLoop, 1000);
         setInterval(() => saveGame(currentSaveSlot), AUTO_SAVE_INTERVAL);
     }
