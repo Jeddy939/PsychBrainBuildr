@@ -246,6 +246,30 @@ document.addEventListener('DOMContentLoaded', async () => {
         gameState.passiveNeuroFuelMultiplier *= 0.5;
     }
 
+    function getUpgradeLocalization(upgrade) {
+        if (!upgrade) {
+            return { name: '', desc: '' };
+        }
+        const localization = LanguageManager.getPhrase(`upgrades.${upgrade.id}`, gameState.currentBrainLevel);
+        const fallbackName = upgrade.name || '';
+        const fallbackDesc = upgrade.description || '';
+        if (localization && typeof localization === 'object') {
+            return {
+                name: localization.name || fallbackName,
+                desc: localization.desc || fallbackDesc
+            };
+        }
+        if (typeof localization === 'string' && localization) {
+            return { name: localization, desc: fallbackDesc };
+        }
+        return { name: fallbackName, desc: fallbackDesc };
+    }
+
+    function getNotEnoughMessage(name) {
+        const message = LanguageManager.getPhrase('upgrades.notEnough', gameState.currentBrainLevel, { name });
+        return typeof message === 'string' && message ? message : `Not enough for ${name}.`;
+    }
+
     // --- 4. RAW DATA ---
     const coreUpgrades_raw_data = [
         { id: "biggerBrain1", name: "Brain Growth: Stage 1", costCurrency: "neurons", cost: 10, description: "Unlocks EASY Qs & Neuron Proliferation.", effectApplied: false, type: 'brain', action: biggerBrain1Action },
@@ -344,7 +368,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         clearFeedbackAreas() { if(feedbackAreaDOM)feedbackAreaDOM.textContent=''; if(streakFeedbackAreaDOM){streakFeedbackAreaDOM.textContent='';streakFeedbackAreaDOM.className='';}},
         updateAllDisplays() { let effRate=gameState.passiveNeuronsPerSecond; if(AnxietySystem.isAttackCurrentlyActive())effRate=0;else if(gameState.currentBrainLevel>=2){effRate*=(1+(gameState.dopamineLevel/100)*0.2)*(1-(gameState.gabaLevel/100)*0.2);effRate=Math.max(0,effRate);} this.updateNeuronDisplay();this.updatePsychbuckDisplay(effRate);this.updateIQDisplay();this.updateOpsDisplay();this.updateNeuroFuelDisplay();this.updateAnxietyDisplay();this.updateFactoryDisplay();this.updateMinigameButtons();UpgradeSystem.updateUpgradeButtons();ProjectSystem.updateProjectButtons();},
         callUpdateBrainVisual() { if(window.GameVisuals && typeof window.GameVisuals.updateBrainVisual === 'function'){window.GameVisuals.updateBrainVisual({level:gameState.currentBrainLevel,dopamine:gameState.dopamineLevel,gaba:gameState.gabaLevel});}},
-        renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${upg.name} ${sTxt}</h3><p>${upg.description}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${upg.name}</h3><p>${upg.description}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
+        renderUpgradeList(upgsToRender,listElDOM,upgTypeStr){if(!listElDOM)return;listElDOM.innerHTML="";upgsToRender.forEach(upg=>{const itm=document.createElement('div');itm.classList.add('upgrade-item');const {name:localizedName,desc:localizedDesc}=getUpgradeLocalization(upg);if(upg.effectApplied){itm.classList.add('purchased');let sTxt="(Purchased)";if(upg.id==="amygdalaActivation"&&AnxietySystem.isAmygdalaFunctioning())sTxt="(Active)";itm.innerHTML=`<h3>${localizedName} ${sTxt}</h3><p>${localizedDesc}</p>`;}else{let cTxt=`${upg.cost} ${upg.costCurrency}`;if(upg.psychbuckCost)cTxt+=` & ${upg.psychbuckCost} Psychbucks`;itm.innerHTML=`<h3>${localizedName}</h3><p>${localizedDesc}</p><p>Cost: ${cTxt}</p><button data-upgrade-id="${upg.id}" data-upgrade-type="${upgTypeStr}">Purchase</button>`;const btn=itm.querySelector('button');if(btn)btn.onclick=(e)=>UpgradeSystem.purchaseUpgrade(e.target.dataset.upgradeId,e.target.dataset.upgradeType);}listElDOM.appendChild(itm);});},
         updateFactoryDisplay(){
             if(!factoryAreaDOM) return;
             if(factoryCountDOM) factoryCountDOM.textContent = gameState.factoryCount;
@@ -454,7 +478,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         renderNeuronProliferationUpgrades() { UIManager.logMessage("[UpgradeSystem] renderNeuronProliferationUpgrades called.", "log-info"); if (neuronProliferationAreaDOM && neuronProliferationAreaDOM.style.display !== 'none') { const upgs = this.getFilteredUpgrades("proliferation"); if (!neuronProliferationUpgradesListDOM) { UIManager.logMessage("[UpgradeSystem] ERROR: neuronProliferationUpgradesListDOM is null!", "log-warning"); return; } UIManager.renderUpgradeList(upgs, neuronProliferationUpgradesListDOM, "proliferation"); this.updateUpgradeButtons(); } else { UIManager.logMessage("[UpgradeSystem] Neuron prolif area hidden, not rendering.", "log-info"); } },
         purchaseUpgrade(upgradeId, upgradeType) {
             let upg; const srcArr = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; upg = srcArr.find(u => u.id === upgradeId);
-            if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; } if (upg.effectApplied) { UIManager.logMessage(`${upg.name} already purchased.`, "log-info"); return; }
+            if (!upg) { UIManager.logMessage(`Upg Err: "${upgradeId}" not found.`, "log-warning"); return; }
+            const { name: localizedNameBefore } = getUpgradeLocalization(upg);
+            if (upg.effectApplied) { UIManager.logMessage(`${localizedNameBefore} already purchased.`, "log-info"); return; }
             let canAfford = (upg.costCurrency === "neurons" && gameState.neurons >= upg.cost && (!upg.psychbuckCost || gameState.psychbucks >= upg.psychbuckCost)) || (upg.costCurrency === "psychbucks" && gameState.psychbucks >= upg.cost);
             if (canAfford) {
                 const prevBrainLvl = gameState.currentBrainLevel;
@@ -478,13 +504,14 @@ document.addEventListener('DOMContentLoaded', async () => {
                 const origUpgData=(upgradeType==="core"?coreUpgrades_raw_data:neuronProliferationUpgrades_raw_data).find(u=>u.id===upgradeId);
                 if(origUpgData&&typeof origUpgData.action==='function'){origUpgData.action();}
                 if(prevBrainLvl!==gameState.currentBrainLevel) ProjectSystem.renderProjects();
-                UIManager.logMessage(`Upgrade: ${upg.name} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
+                const { name: localizedNameAfter } = getUpgradeLocalization(upg);
+                UIManager.logMessage(`Upgrade: ${localizedNameAfter} acquired.`, 'log-upgrade'); UIManager.updateAllDisplays();
                 if(upg.type=="brain") UIManager.playBrainUpgradeAnimation();
                 if(upgradeType==="core")this.renderCoreUpgrades();else this.renderNeuronProliferationUpgrades();
-            } else { UIManager.logMessage(`Not enough for ${upg.name}.`, "log-warning"); }
+            } else { UIManager.logMessage(getNotEnoughMessage(localizedNameBefore), "log-warning"); }
         },
         getUpgradeData(type, brainLevelToFind) { const source = type === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; return source.find(upg => upg.type === 'brain' && (upg.id.match(/biggerBrain(\d+)/) && parseInt(upg.id.match(/biggerBrain(\d+)/)[1]) === brainLevelToFind)); },
-        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; UIManager.logMessage(`Reverted purchase status for ${upg.name}.`, "log-info"); } },
+        markUpgradeNotApplied(upgradeId, upgradeType) { const source = upgradeType === "core" ? this.coreUpgrades : this.neuronProliferationUpgrades; const upg = source.find(u => u.id === upgradeId); if (upg) { upg.effectApplied = false; const { name: localizedName } = getUpgradeLocalization(upg); UIManager.logMessage(`Reverted purchase status for ${localizedName}.`, "log-info"); } },
         updateUpgradeButtons() { const allBtns=document.querySelectorAll('#upgrades-list button[data-upgrade-id],#neuron-proliferation-upgrades-list button[data-upgrade-id]');allBtns.forEach(btn=>{const uid=btn.dataset.upgradeId;const utype=btn.dataset.upgradeType;let upg=utype==="core"?this.coreUpgrades.find(u=>u.id===uid):this.neuronProliferationUpgrades.find(u=>u.id===uid);if(upg&&!upg.effectApplied){let canAfford=(upg.costCurrency==="neurons"&&gameState.neurons>=upg.cost&&(!upg.psychbuckCost||gameState.psychbucks>=upg.psychbuckCost))||(upg.costCurrency==="psychbucks"&&gameState.psychbucks>=upg.cost);UIManager.updateSingleUpgradeButton(btn,canAfford);}else if(upg&&upg.effectApplied){UIManager.updateSingleUpgradeButton(btn,false);}else{UIManager.updateSingleUpgradeButton(btn,false);}}); }
     };
 
