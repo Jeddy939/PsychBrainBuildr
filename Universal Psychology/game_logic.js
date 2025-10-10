@@ -115,6 +115,9 @@ document.addEventListener('DOMContentLoaded', async () => {
     const contentWrapperDOM = document.querySelector('.content-wrapper');
     const leftColumnDOM = document.querySelector('.left-column');
     const brainVisualAreaDOM = document.getElementById('brain-visual-area');
+    const threeContainerDOM = document.getElementById('threejs-canvas-container');
+    const brainVizHomeSlotDOM = document.getElementById('brain-viz-home-slot');
+    const brainPopupVisualSlotDOM = document.getElementById('brain-popup-visual-slot');
     const questionAreaSectionDOM = document.getElementById('question-area');
     const streakFeedbackAreaDOM = document.getElementById('streak-feedback-area');
     const questionTextElementDOM = document.getElementById('question-text');
@@ -156,6 +159,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     const openBrainTetrisBtn = document.getElementById('open-braintetris');
     const openFlappyFreudBtn = document.getElementById('open-flappyfreud');
     const openFeedSundgrenBtn = document.getElementById('open-feedsundgren');
+    const bodyDOM = document.body;
 
     LanguageManager.apply(gameState.currentBrainLevel);
 
@@ -634,8 +638,17 @@ document.addEventListener('DOMContentLoaded', async () => {
     function handleDopamineSlider(event) { gameState.dopamineLevel = parseInt(event.target.value); if(dopamineLevelDisplayDOM) dopamineLevelDisplayDOM.textContent = gameState.dopamineLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
     function handleGabaSlider(event) { gameState.gabaLevel = parseInt(event.target.value); if(gabaLevelDisplayDOM) gabaLevelDisplayDOM.textContent = gameState.gabaLevel; UIManager.callUpdateBrainVisual(); UIManager.updateAllDisplays(); }
 
+    function scheduleRendererResize(){
+        setTimeout(() => window.dispatchEvent(new Event('resize')), 0);
+    }
+
     function openBrainPopup(){
         if(!brainPopupDOM) return;
+        if(bodyDOM) bodyDOM.classList.add('brain-popup-open');
+        if(threeContainerDOM && brainPopupVisualSlotDOM && threeContainerDOM.parentElement !== brainPopupVisualSlotDOM){
+            brainPopupVisualSlotDOM.appendChild(threeContainerDOM);
+            threeContainerDOM.classList.add('enlarged');
+        }
         if(!brainChart && brainStatsChartDOM && window.Chart){
             const ctx = brainStatsChartDOM.getContext('2d');
             brainChart = new Chart(ctx, {
@@ -651,10 +664,19 @@ document.addEventListener('DOMContentLoaded', async () => {
             });
         }
         brainPopupDOM.style.display = 'flex';
+        scheduleRendererResize();
     }
 
     function closeBrainPopup(){
+        if(bodyDOM) bodyDOM.classList.remove('brain-popup-open');
+        if(threeContainerDOM){
+            threeContainerDOM.classList.remove('enlarged');
+            if(brainVizHomeSlotDOM && threeContainerDOM.parentElement !== brainVizHomeSlotDOM){
+                brainVizHomeSlotDOM.appendChild(threeContainerDOM);
+            }
+        }
         if(brainPopupDOM) brainPopupDOM.style.display = 'none';
+        scheduleRendererResize();
     }
 
     function saveGame(slot = currentSaveSlot) {
@@ -806,7 +828,6 @@ document.addEventListener('DOMContentLoaded', async () => {
             UIManager.updateAllDisplays();
         });
         if (newGameBtnDOM) newGameBtnDOM.addEventListener('click', () => resetGame(currentSaveSlot));
-        const threeContainerDOM = document.getElementById('threejs-canvas-container');
         if (threeContainerDOM) threeContainerDOM.addEventListener('click', openBrainPopup);
         if (closeBrainPopupBtnDOM) closeBrainPopupBtnDOM.addEventListener('click', closeBrainPopup);
         if (infoButtonDOM) infoButtonDOM.addEventListener('click', () => {
