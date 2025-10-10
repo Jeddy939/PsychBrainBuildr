@@ -19,6 +19,8 @@ window.GameVisuals = (function() {
         velocities: []
     };
 
+    let lastBrainVisualParams = { level: 0, dopamine: 0, gaba: 0 };
+
     const canvasContainerId = 'threejs-canvas-container';
 
     // --- Variables for Pulsation & Animation ---
@@ -102,6 +104,9 @@ window.GameVisuals = (function() {
                     }
                 });
                 // Don't add to modelBrainContainer here, updateBrainVisual will handle it.
+                if (lastBrainVisualParams.level >= 2) {
+                    updateBrainVisual(lastBrainVisualParams);
+                }
             },
             undefined,
             function (error) {
@@ -370,8 +375,10 @@ window.GameVisuals = (function() {
     // This function now orchestrates which brain is shown and updates its specific visuals
     function updateBrainVisual(params) {
         const level = params.level !== undefined ? params.level : 0; // Default to level 0 if undefined
-        const dopamine = params.dopamine || 0; 
+        const dopamine = params.dopamine || 0;
         const gaba = params.gaba || 0;
+
+        lastBrainVisualParams = { level, dopamine, gaba };
 
         // Clean up previous procedural brain
         while (proceduralBrainContainer.children.length > 0) {
