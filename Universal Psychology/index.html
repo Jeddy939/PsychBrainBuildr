@@ -71,7 +71,9 @@
                 <section id="brain-visual-area" style="display:none;">
                     <div class="brain-viz-wrapper">
                         <h2 data-lang-key="yourBrain"></h2>
-                        <div id="threejs-canvas-container"></div>
+                        <div id="brain-viz-home-slot">
+                            <div id="threejs-canvas-container"></div>
+                        </div>
                     </div>
                 </section>
 
@@ -135,8 +137,11 @@
     <!-- Brain Stats Popup -->
         <div id="brain-popup" class="popup-overlay">
             <div id="brain-popup-content">
-                <canvas id="brain-stats-chart"></canvas>
                 <button id="close-brain-popup">Close</button>
+                <div id="brain-popup-visual-slot"></div>
+                <div id="brain-popup-chart-section">
+                    <canvas id="brain-stats-chart"></canvas>
+                </div>
             </div>
         </div>
 

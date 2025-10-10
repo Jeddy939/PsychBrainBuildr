@@ -155,6 +155,13 @@ body {
     color: var(--accent-color);
     flex-shrink: 0;
 }
+#brain-viz-home-slot {
+    flex-grow: 1;
+    display: flex;
+}
+#brain-viz-home-slot #threejs-canvas-container {
+    flex-grow: 1;
+}
 #threejs-canvas-container {
     flex-grow: 1;
     aspect-ratio: 4 / 3;
@@ -170,6 +177,12 @@ body {
     top: 0;
     left: 0;
     width: 100%;
+    height: 100%;
+}
+#threejs-canvas-container.enlarged {
+    aspect-ratio: auto;
+    max-height: none;
+    min-height: 0;
     height: 100%;
 }
 
@@ -456,14 +469,36 @@ button:hover {
 #brain-popup-content {
     background-color: #fff;
     padding: 20px;
-    border-radius: 8px;
-    width: 80vw;
-    max-width: 800px;
+    border-radius: 12px;
+    width: min(1000px, 90vw);
+    height: min(90vh, 720px);
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    position: relative;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.35);
 }
-#brain-popup-content canvas {
+#brain-popup-content #close-brain-popup {
+    position: absolute;
+    top: 12px;
+    right: 12px;
+}
+#brain-popup-visual-slot {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    align-items: stretch;
+}
+#brain-popup-visual-slot #threejs-canvas-container {
+    flex: 1;
+    border-radius: 8px;
+}
+#brain-popup-chart-section {
+    flex-shrink: 0;
+}
+#brain-stats-chart {
     width: 100%;
-    height: 300px;
-    margin-bottom: 10px;
+    height: 220px;
 }
 
 /* NeuroSnake Popup */
@@ -516,6 +551,10 @@ button:hover {
     pointer-events: none;
     overflow: visible;
     z-index: 1400;
+}
+
+body.brain-popup-open {
+    overflow: hidden;
 }
 
 #upgrade-animation-overlay .upgrade-spin-image {
