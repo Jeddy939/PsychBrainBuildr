@@ -494,11 +494,33 @@ button:hover {
     border-radius: 8px;
 }
 #brain-popup-chart-section {
-    flex-shrink: 0;
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    width: 280px;
+    height: 180px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.92);
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
 }
 #brain-stats-chart {
     width: 100%;
-    height: 220px;
+    height: 100%;
+}
+
+@media (max-width: 768px) {
+    #brain-popup-chart-section {
+        width: min(240px, 60vw);
+        height: 160px;
+        bottom: 16px;
+        right: 16px;
+    }
 }
 
 /* NeuroSnake Popup */
