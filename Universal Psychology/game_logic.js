@@ -690,6 +690,8 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
         if(!brainChart && brainStatsChartDOM && window.Chart){
             const ctx = brainStatsChartDOM.getContext('2d');
+            brainStatsChartDOM.width = 280;
+            brainStatsChartDOM.height = 180;
             brainChart = new Chart(ctx, {
                 type: 'line',
                 data: {
@@ -699,7 +701,27 @@ document.addEventListener('DOMContentLoaded', async () => {
                         { label: 'Fuel', data: brainStatsData.fuel, borderColor: 'orange', fill: false }
                     ]
                 },
-                options: { animation: false }
+                options: {
+                    animation: false,
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                boxWidth: 12,
+                                font: { size: 10 }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { font: { size: 10 } }
+                        },
+                        y: {
+                            ticks: { font: { size: 10 } }
+                        }
+                    }
+                }
             });
             lastChartUpdateMs = performance.now();
         }
