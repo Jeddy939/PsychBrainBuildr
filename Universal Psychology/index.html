@@ -60,7 +60,7 @@
                 <section id="minigames-area">
                     <h2 data-lang-key="neuroGames"></h2>
                     <button id="open-neurosnake" style="display:none;">Play NeuroSnake</button>
-                    <button id="open-braintetris" style="display:none;">Play Brain Tetris</button>
+                    <button id="open-braintetris">Play Brain Tetris</button>
                     <button id="open-flappyfreud" style="display:none;">Play Flappy Freud</button>
                     <button id="open-feedsundgren" style="display:none;">Feed Sundgren</button>
                 </section>
@@ -161,7 +161,10 @@
                 </div>
                 <canvas id="braintetris-canvas"></canvas>
                 <p id="braintetris-message">Use ← → to move, ↑ to rotate, ↓ to soft drop, and space to slam the squishy tetromino.</p>
-                <button id="close-braintetris">Close</button>
+                <div class="braintetris-controls">
+                    <button id="start-braintetris">Start Brain Tetris</button>
+                    <button id="close-braintetris">Close</button>
+                </div>
             </div>
         </div>
 

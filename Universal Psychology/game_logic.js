@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // isAmygdalaActive is effectively AnxietySystem.isAmygdalaFunctioning()
         unlockedGames: {
             neurosnake: false,
-            brainTetris: false,
+            brainTetris: true,
             flappyFreud: false,
             feedSundgren: false
         }

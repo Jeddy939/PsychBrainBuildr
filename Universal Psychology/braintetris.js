@@ -10,7 +10,7 @@ const LINE_REWARD = [0, 2, 5, 9, 14];
 
 let canvas, ctx, nextCanvas, nextCtx;
 let scoreDisplay, linesDisplay, levelDisplay, messageDisplay;
-let overlayEl, closeButton, openButton;
+let overlayEl, closeButton, openButton, startButton;
 
 let board;
 let currentPiece = null;
@@ -455,6 +455,33 @@ function rotatePiece(dir) {
     }
 }
 
+function resetGameState() {
+    board = createMatrix(COLS, ROWS);
+    currentPiece = null;
+    nextPiece = null;
+    psychbucksEarned = 0;
+    dropCounter = 0;
+    dropInterval = INITIAL_DROP_INTERVAL;
+    lastTime = 0;
+    animationTick = 0;
+    totalLinesCleared = 0;
+    bag = [];
+    isRunning = false;
+    isGameOver = false;
+    updateStats();
+}
+
+function updateStartButtonLabel() {
+    if (!startButton) return;
+    if (isRunning) {
+        startButton.textContent = 'Restart Brain Tetris';
+    } else if (isGameOver) {
+        startButton.textContent = 'Play Again';
+    } else {
+        startButton.textContent = 'Start Brain Tetris';
+    }
+}
+
 function update(time = 0) {
     if (!isPopupOpen) {
         animationId = null;
@@ -478,14 +505,15 @@ function update(time = 0) {
 
 function resizeCanvas() {
     if (!canvas) return;
-    const maxWidth = Math.min(window.innerWidth * 0.5, window.innerHeight * 0.75, 520);
-    const blockSize = Math.max(18, Math.floor(maxWidth / COLS));
+    const availableWidth = Math.min(window.innerWidth * 0.65, 420);
+    const availableHeight = Math.min(window.innerHeight * 0.6, 520);
+    const blockSize = Math.max(14, Math.floor(Math.min(availableWidth / COLS, availableHeight / ROWS)));
     canvas.width = blockSize * COLS;
     canvas.height = blockSize * ROWS;
     canvas.style.width = `${canvas.width}px`;
     canvas.style.height = `${canvas.height}px`;
     if (nextCanvas) {
-        const previewSize = Math.max(110, Math.min(window.innerWidth, window.innerHeight) * 0.18);
+        const previewSize = Math.max(90, Math.min(blockSize * 4, window.innerWidth * 0.25, window.innerHeight * 0.25));
         nextCanvas.width = previewSize;
         nextCanvas.height = previewSize;
         nextCanvas.style.width = `${previewSize}px`;
@@ -497,20 +525,16 @@ function resizeCanvas() {
 }
 
 function startGame() {
-    board = createMatrix(COLS, ROWS);
-    psychbucksEarned = 0;
-    dropCounter = 0;
-    dropInterval = INITIAL_DROP_INTERVAL;
-    lastTime = 0;
-    animationTick = 0;
-    totalLinesCleared = 0;
-    bag = [];
-    nextPiece = null;
+    resetGameState();
     spawnPiece();
-    updateStats();
+    dropCounter = 0;
     setMessage('Use ← → to shift squishy blocks, ↑ to rotate, ↓ to nudge, space to slam!');
     isRunning = true;
     isGameOver = false;
+    updateStartButtonLabel();
+    drawBoard();
+    drawPiece(currentPiece);
+    drawNextPiece();
     if (!animationId) {
         animationId = window.requestAnimationFrame(update);
     }
@@ -518,6 +542,7 @@ function startGame() {
 
 function stopGame() {
     isRunning = false;
+    updateStartButtonLabel();
     if (animationId) {
         window.cancelAnimationFrame(animationId);
         animationId = null;
@@ -527,7 +552,8 @@ function stopGame() {
 function gameOver() {
     isRunning = false;
     isGameOver = true;
-    setMessage('Brain overload! Press Enter to rebuild your cortex.');
+    setMessage('Brain overload! Press Start to rebuild your cortex.');
+    updateStartButtonLabel();
 }
 
 function handleKeydown(event) {
@@ -540,7 +566,12 @@ function handleKeydown(event) {
         startGame();
         return;
     }
-    if (!isRunning) return;
+    if (!isRunning) {
+        if (key === 'Enter') {
+            startGame();
+        }
+        return;
+    }
     switch (key) {
         case 'ArrowLeft':
             movePiece(-1);
@@ -567,12 +598,17 @@ function openPopup() {
     if (!overlayEl) return;
     overlayEl.style.display = 'flex';
     isPopupOpen = true;
+    resetGameState();
+    setMessage('Press Start to grow your squishy cortex!');
+    updateStartButtonLabel();
     resizeCanvas();
-    startGame();
     window.addEventListener('keydown', handleKeydown);
     window.addEventListener('resize', resizeCanvas);
     if (!animationId) {
         animationId = window.requestAnimationFrame(update);
+    }
+    if (startButton) {
+        startButton.focus();
     }
 }
 
@@ -597,6 +633,7 @@ function init() {
     overlayEl = document.getElementById('braintetris-popup');
     closeButton = document.getElementById('close-braintetris');
     openButton = document.getElementById('open-braintetris');
+    startButton = document.getElementById('start-braintetris');
 
     if (closeButton) {
         closeButton.addEventListener('click', closePopup);
@@ -606,6 +643,12 @@ function init() {
             openPopup();
         });
     }
+    if (startButton) {
+        startButton.addEventListener('click', () => {
+            startGame();
+        });
+    }
+    updateStartButtonLabel();
 }
 
 document.addEventListener('DOMContentLoaded', init);
