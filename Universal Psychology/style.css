@@ -579,7 +579,7 @@ button:hover {
     background: linear-gradient(135deg, #ffe0ef 0%, #ffd0e7 100%);
     padding: 20px;
     border-radius: 16px;
-    width: min(90vw, 720px);
+    width: min(92vw, 540px);
     max-height: 90vh;
     display: flex;
     flex-direction: column;
@@ -591,9 +591,10 @@ button:hover {
 
 .braintetris-top {
     display: flex;
-    justify-content: space-between;
+    justify-content: center;
     gap: 16px;
     align-items: flex-start;
+    flex-wrap: wrap;
 }
 
 .braintetris-stats {
@@ -632,6 +633,41 @@ button:hover {
     border-radius: 18px;
     border: 3px solid rgba(255, 192, 203, 0.75);
     box-shadow: 0 10px 24px rgba(176, 48, 96, 0.25);
+    max-width: 100%;
+}
+
+.braintetris-controls {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+}
+
+#start-braintetris,
+#close-braintetris {
+    padding: 8px 18px;
+    border-radius: 20px;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+#start-braintetris {
+    background: #ff6fa8;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(255, 111, 168, 0.35);
+}
+
+#close-braintetris {
+    background: #b03060;
+    color: #fff;
+    box-shadow: 0 6px 14px rgba(176, 48, 96, 0.35);
+}
+
+#start-braintetris:hover,
+#close-braintetris:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 10px 20px rgba(176, 48, 96, 0.25);
 }
 
 #braintetris-message {
@@ -639,23 +675,6 @@ button:hover {
     text-align: center;
     color: #8d2254;
     font-weight: 600;
-}
-
-#close-braintetris {
-    align-self: center;
-    padding: 8px 18px;
-    border-radius: 20px;
-    border: none;
-    background: #b03060;
-    color: #fff;
-    font-weight: bold;
-    cursor: pointer;
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-#close-braintetris:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 12px rgba(176, 48, 96, 0.3);
 }
 
 
