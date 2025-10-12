@@ -50,25 +50,38 @@ document.addEventListener('DOMContentLoaded', async () => {
         init(projectData) { this.projects = projectData.map(p => ({...p})); },
         renderProjects() {
             if(!projectsListDOM) return;
-            projectsListDOM.innerHTML = '';
+            projectsListDOM.textContent = '';
+            const fragment = document.createDocumentFragment();
             this.projects.filter(p => !p.purchased && (!p.trigger || p.trigger())).forEach(p => {
-                const div = document.createElement('div');
-                div.className = 'project-item';
+                const container = document.createElement('div');
+                container.className = 'project-item';
+                const titleEl = document.createElement('h3');
+                titleEl.textContent = p.title;
+                const descEl = document.createElement('p');
+                descEl.textContent = p.description;
                 const btn = document.createElement('button');
                 btn.textContent = `Start (${p.cost} Ops)`;
                 btn.disabled = gameState.mindOps < p.cost;
                 btn.dataset.projectId = p.id;
-                btn.onclick = () => this.purchaseProject(p.id);
-                div.innerHTML = `<h3>${p.title}</h3><p>${p.description}</p>`;
-                div.appendChild(btn);
-                projectsListDOM.appendChild(div);
+                btn.addEventListener('click', () => this.purchaseProject(p.id));
+                container.appendChild(titleEl);
+                container.appendChild(descEl);
+                container.appendChild(btn);
+                fragment.appendChild(container);
             });
+            projectsListDOM.appendChild(fragment);
         },
         updateProjectButtons(){
             if(!projectsListDOM) return;
-            this.projects.filter(p=>!p.purchased && (!p.trigger || p.trigger())).forEach(p=>{
-                const btn = projectsListDOM.querySelector(`button[data-project-id="${p.id}"]`);
-                if(btn) btn.disabled = gameState.mindOps < p.cost;
+            const projectMap = new Map(this.projects.map(project => [String(project.id), project]));
+            projectsListDOM.querySelectorAll('button[data-project-id]').forEach(btn => {
+                const project = projectMap.get(btn.dataset.projectId);
+                if(!project){
+                    btn.disabled = true;
+                    return;
+                }
+                const available = !project.purchased && (!project.trigger || project.trigger());
+                btn.disabled = !available || gameState.mindOps < project.cost;
             });
         },
         purchaseProject(id){
@@ -167,6 +180,19 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const brainStatsData = { labels: [], neurons: [], fuel: [] };
     let brainChart = null;
+    let gameLoopId = null;
+    let autoSaveId = null;
+    let lastChartUpdateMs = 0;
+
+    function fmtInt(n){
+        return Math.floor(n).toLocaleString();
+    }
+
+    function clamp(v, min, max){
+        return Math.min(Math.max(v, min), max);
+    }
+
+    const SAVE_VERSION = 1;
 
     // Intervals for automatic food purchasing
     let intermittentFastingIntervalId = null;
@@ -315,18 +341,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- 5. UI MANAGER OBJECT ---
     const UIManager = {
-        logMessage(message, type = 'log-info') { if (!infoBannerDOM) return; while (infoBannerDOM.childNodes.length >= MAX_LOG_MESSAGES) { infoBannerDOM.removeChild(infoBannerDOM.lastChild); } const el = document.createElement('p'); el.textContent = `[${new Date().toLocaleTimeString([],{hour:'2-digit',minute:'2-digit',second:'2-digit'})}] ${message}`; el.className = type; infoBannerDOM.insertBefore(el, infoBannerDOM.firstChild); infoBannerDOM.scrollTop = 0; },
+        logMessage(message, type = 'log-info') {
+            if (!infoBannerDOM) return;
+            const now = new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'});
+            const el = document.createElement('p');
+            el.textContent = `[${now}] ${message}`;
+            el.className = type;
+            infoBannerDOM.prepend(el);
+            while (infoBannerDOM.childElementCount > MAX_LOG_MESSAGES) {
+                if (infoBannerDOM.lastElementChild) {
+                    infoBannerDOM.lastElementChild.remove();
+                }
+            }
+            infoBannerDOM.scrollTop = 0;
+        },
         updateNeuronDisplay() {
             if (neuronsDisplayDOM) {
                 neuronsDisplayDOM.textContent = LanguageManager.getPhrase('stats.neurons', gameState.currentBrainLevel, {
-                    value: Math.floor(gameState.neurons)
+                    value: fmtInt(gameState.neurons)
                 });
             }
         },
         updatePsychbuckDisplay(rate) {
             if (psychbucksDisplayDOM) {
                 psychbucksDisplayDOM.textContent = LanguageManager.getPhrase('stats.psychbucks', gameState.currentBrainLevel, {
-                    value: Math.floor(gameState.psychbucks),
+                    value: fmtInt(gameState.psychbucks),
                     rate: rate.toFixed(1)
                 });
             }
@@ -334,7 +373,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         updateOpsDisplay() {
             if (opsDisplayDOM) {
                 opsDisplayDOM.textContent = LanguageManager.getPhrase('stats.ops', gameState.currentBrainLevel, {
-                    value: Math.floor(gameState.mindOps)
+                    value: fmtInt(gameState.mindOps)
                 });
             }
         },
@@ -349,18 +388,18 @@ document.addEventListener('DOMContentLoaded', async () => {
         },
         updateNeuroFuelDisplay() {
             if (neurofuelCountDOM && neurofuelCostDOM) {
-                neurofuelCountDOM.textContent = Math.floor(gameState.neuroFuel);
-                neurofuelCostDOM.textContent = Math.ceil(gameState.neuroFuelCost);
+                neurofuelCountDOM.textContent = fmtInt(gameState.neuroFuel);
+                neurofuelCostDOM.textContent = fmtInt(Math.ceil(gameState.neuroFuelCost));
             }
             if (buyNeurofuelBtnDOM) buyNeurofuelBtnDOM.disabled = gameState.psychbucks < gameState.neuroFuelCost;
             const fuelDisplayDOM = document.getElementById('neurofuel-display');
             if (fuelDisplayDOM) {
                 fuelDisplayDOM.textContent = LanguageManager.getPhrase('stats.fuel', gameState.currentBrainLevel, {
-                    value: Math.floor(gameState.neuroFuel)
+                    value: fmtInt(gameState.neuroFuel)
                 });
             }
         },
-        updateAnxietyDisplay() { if (!anxietyStatusDisplayDOM) return; const ax = AnxietySystem.getAnxietyInfo(); let txt = `Anxiety: Normal (${ax.meter.toFixed(0)}%)`, clr = "green"; if (ax.isAttackActive){txt="Status: ANXIETY ATTACK!";clr="red";} else if (ax.activeStimuliCount>0 && ax.isAmygdalaSystemActive){txt=`Anxiety: Stimuli! (${ax.meter.toFixed(0)}%)`;clr="purple";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD){txt=`Anxiety: CRITICAL (${ax.meter.toFixed(0)}%)`;clr="orange";} else if (ax.meter>ANXIETY_SUSTAINED_THRESHOLD/2){txt=`Anxiety: Elevated (${ax.meter.toFixed(0)}%)`;clr="#CCCC00";} else if (ax.meter>0){txt=`Anxiety: Moderate (${ax.meter.toFixed(0)}%)`;clr="yellowgreen";} anxietyStatusDisplayDOM.textContent=txt; anxietyStatusDisplayDOM.style.color=clr;},
+        updateAnxietyDisplay() { if (!anxietyStatusDisplayDOM) return; const ax = AnxietySystem.getAnxietyInfo(); const meter = clamp(ax.meter, 0, 100); let txt = `Anxiety: Normal (${meter.toFixed(0)}%)`, clr = "green"; if (ax.isAttackActive){txt="Status: ANXIETY ATTACK!";clr="red";} else if (ax.activeStimuliCount>0 && ax.isAmygdalaSystemActive){txt=`Anxiety: Stimuli! (${meter.toFixed(0)}%)`;clr="purple";} else if (meter>ANXIETY_SUSTAINED_THRESHOLD){txt=`Anxiety: CRITICAL (${meter.toFixed(0)}%)`;clr="orange";} else if (meter>ANXIETY_SUSTAINED_THRESHOLD/2){txt=`Anxiety: Elevated (${meter.toFixed(0)}%)`;clr="#CCCC00";} else if (meter>0){txt=`Anxiety: Moderate (${meter.toFixed(0)}%)`;clr="yellowgreen";} anxietyStatusDisplayDOM.textContent=txt; anxietyStatusDisplayDOM.style.color=clr;},
         updateQuestionAreaUIVisibility() { if (!questionAreaSectionDOM) {this.logMessage("Q Area DOM missing!","log-warning"); return;} if(gameState.questionsActuallyUnlocked){questionAreaSectionDOM.style.display='';this.logMessage("Q area VISIBLE.","log-info"); if(QuestionSystem.getCurrentQuestionIndex()===-1){this.logMessage("UIManager: Triggering QS loadNextQ.","log-info");QuestionSystem.loadNextQuestion();}}else{questionAreaSectionDOM.style.display='none';if(questionTextElementDOM)questionTextElementDOM.textContent="Upgrade brain for Qs.";if(answerOptionsElementDOM)answerOptionsElementDOM.innerHTML='';this.clearFeedbackAreas();this.logMessage("Q area HIDDEN.","log-info");}},
         displayQuestion(qData) {
             if(questionTextElementDOM) questionTextElementDOM.textContent = qData.text;
@@ -662,6 +701,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 },
                 options: { animation: false }
             });
+            lastChartUpdateMs = performance.now();
         }
         brainPopupDOM.style.display = 'flex';
         scheduleRendererResize();
@@ -684,7 +724,8 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameState: { ...gameState },
             coreUpgrades: UpgradeSystem.coreUpgrades,
             proliferationUpgrades: UpgradeSystem.neuronProliferationUpgrades,
-            purchasedProjects: gameState.purchasedProjects
+            purchasedProjects: gameState.purchasedProjects,
+            version: SAVE_VERSION
         };
         localStorage.setItem(`up_save_${slot}`, JSON.stringify(save));
     }
@@ -793,6 +834,7 @@ document.addEventListener('DOMContentLoaded', async () => {
             gameState.totalNeuronsGenerated += possible;
             gameState.mindOps += possible * OPS_PER_NEURON;
             gameState.neuroFuel -= possible * gameState.passiveNeuroFuelMultiplier;
+            gameState.neuroFuel = Math.max(0, gameState.neuroFuel);
         }
         UIManager.updateAllDisplays();
         brainStatsData.labels.push('');
@@ -803,7 +845,13 @@ document.addEventListener('DOMContentLoaded', async () => {
             brainStatsData.neurons.shift();
             brainStatsData.fuel.shift();
         }
-        if(brainChart) brainChart.update();
+        if(brainChart){
+            const now = performance.now();
+            if(now - lastChartUpdateMs >= 1000){
+                brainChart.update();
+                lastChartUpdateMs = now;
+            }
+        }
     }
 
     // =======================================================================
@@ -865,9 +913,36 @@ document.addEventListener('DOMContentLoaded', async () => {
         UIManager.updateAllDisplays();
         if (instructionsOverlayDOM) instructionsOverlayDOM.style.display = 'flex';
         UIManager.logMessage("Welcome to Universal Psychology!", "log-info");
-        setInterval(gameLoop, 1000);
-        setInterval(() => saveGame(currentSaveSlot), AUTO_SAVE_INTERVAL);
+        startGameTimers();
     }
+
+    function startGameTimers(){
+        if(gameLoopId === null){
+            gameLoopId = setInterval(gameLoop, 1000);
+        }
+        if(autoSaveId === null){
+            autoSaveId = setInterval(() => saveGame(currentSaveSlot), AUTO_SAVE_INTERVAL);
+        }
+    }
+
+    function stopGameTimers(){
+        if(gameLoopId !== null){
+            clearInterval(gameLoopId);
+            gameLoopId = null;
+        }
+        if(autoSaveId !== null){
+            clearInterval(autoSaveId);
+            autoSaveId = null;
+        }
+    }
+
+    document.addEventListener('visibilitychange', () => {
+        if(document.hidden){
+            stopGameTimers();
+        } else {
+            startGameTimers();
+        }
+    });
 
     // Expose limited API for external modules like minigames
     window.GameAPI = {
