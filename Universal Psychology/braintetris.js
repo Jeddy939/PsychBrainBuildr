@@ -11,6 +11,7 @@ const LINE_REWARD = [0, 2, 5, 9, 14];
 let canvas, ctx, nextCanvas, nextCtx;
 let scoreDisplay, linesDisplay, levelDisplay, messageDisplay;
 let overlayEl, closeButton, openButton, startButton;
+let brainContainer;
 
 let board;
 let currentPiece = null;
@@ -253,10 +254,10 @@ function invalidateBoardMetrics() {
 }
 
 function getBrainBounds(width, height) {
-    const brainWidth = width * 0.6;
-    const brainHeight = height * 0.62;
-    const x = width * 0.25;
-    const y = height * 0.16;
+    const brainWidth = width * 0.54;
+    const brainHeight = height * 0.58;
+    const x = width * 0.24;
+    const y = height * 0.17;
     return { x, y, width: brainWidth, height: brainHeight };
 }
 
@@ -290,30 +291,44 @@ function createHeadPath(width, height) {
 function createBrainPath(width, height) {
     const bounds = getBrainBounds(width, height);
     const { x, y, width: w, height: h } = bounds;
+    const topCenterX = x + w * 0.52;
     const path = new Path2D();
-    path.moveTo(x + w * 0.25, y + h * 0.02);
-    path.bezierCurveTo(x - w * 0.05, y + h * 0.1, x, y + h * 0.45, x + w * 0.22, y + h * 0.64);
-    path.bezierCurveTo(x + w * 0.05, y + h * 0.92, x + w * 0.28, y + h * 0.98, x + w * 0.44, y + h * 0.98);
-    path.bezierCurveTo(x + w * 0.68, y + h * 1.02, x + w * 1.02, y + h * 0.82, x + w * 0.88, y + h * 0.52);
-    path.bezierCurveTo(x + w * 1.02, y + h * 0.38, x + w * 0.95, y + h * 0.12, x + w * 0.72, y + h * 0.02);
-    path.bezierCurveTo(x + w * 0.62, y - h * 0.06, x + w * 0.38, y - h * 0.04, x + w * 0.25, y + h * 0.02);
+
+    path.moveTo(topCenterX, y);
+    path.bezierCurveTo(x + w * 0.38, y - h * 0.08, x + w * 0.16, y + h * 0.02, x + w * 0.12, y + h * 0.18);
+    path.bezierCurveTo(x + w * 0.02, y + h * 0.26, x + w * 0.02, y + h * 0.46, x + w * 0.08, y + h * 0.58);
+    path.bezierCurveTo(x + w * 0.02, y + h * 0.72, x + w * 0.12, y + h * 0.86, x + w * 0.26, y + h * 0.94);
+    path.bezierCurveTo(x + w * 0.4, y + h * 1.02, x + w * 0.58, y + h * 1.02, x + w * 0.7, y + h * 0.96);
+    path.bezierCurveTo(x + w * 0.9, y + h * 0.88, x + w * 1.02, y + h * 0.68, x + w * 0.98, y + h * 0.46);
+    path.bezierCurveTo(x + w * 1.02, y + h * 0.28, x + w * 0.94, y + h * 0.12, x + w * 0.74, y + h * 0.04);
+    path.bezierCurveTo(x + w * 0.66, y - h * 0.04, x + w * 0.58, y - h * 0.04, topCenterX, y);
     path.closePath();
     return path;
 }
 
 function computeBoardMetrics(width, height) {
+    const usingSilhouette = Boolean(brainContainer);
     const brainBounds = getBrainBounds(width, height);
     const blockSize = Math.min(brainBounds.width / COLS, brainBounds.height / ROWS);
     const boardWidth = blockSize * COLS;
     const boardHeight = blockSize * ROWS;
+    const offsetX = brainBounds.x + (brainBounds.width - boardWidth) / 2;
+    const offsetY = brainBounds.y + (brainBounds.height - boardHeight) / 2;
+
     boardMetrics.blockSize = blockSize;
-    boardMetrics.offsetX = brainBounds.x + (brainBounds.width - boardWidth) / 2;
-    boardMetrics.offsetY = brainBounds.y + (brainBounds.height - boardHeight) / 2;
+    boardMetrics.offsetX = offsetX;
+    boardMetrics.offsetY = offsetY;
     boardMetrics.width = boardWidth;
     boardMetrics.height = boardHeight;
     boardMetrics.brainBounds = brainBounds;
-    boardMetrics.brainPath = createBrainPath(width, height);
-    boardMetrics.headPath = createHeadPath(width, height);
+
+    if (usingSilhouette) {
+        boardMetrics.brainPath = createBrainPath(width, height);
+        boardMetrics.headPath = null;
+    } else {
+        boardMetrics.brainPath = createBrainPath(width, height);
+        boardMetrics.headPath = createHeadPath(width, height);
+    }
     return boardMetrics;
 }
 
@@ -512,9 +527,80 @@ function drawBoard() {
     const width = canvas.width;
     const height = canvas.height;
     const metrics = computeBoardMetrics(width, height);
-    const { headPath, brainPath, brainBounds } = metrics;
+    const { headPath, brainPath, brainBounds, blockSize, offsetX, offsetY } = metrics;
 
     ctx.clearRect(0, 0, width, height);
+
+    if (!headPath) {
+        const boardWidth = blockSize * COLS;
+        const boardHeight = blockSize * ROWS;
+
+        ctx.save();
+        if (brainPath) {
+            ctx.save();
+            ctx.fillStyle = 'rgba(9, 12, 21, 0.92)';
+            ctx.fill(brainPath);
+            ctx.clip(brainPath);
+        } else {
+            ctx.fillStyle = 'rgba(6, 8, 16, 0.82)';
+            ctx.fillRect(offsetX, offsetY, boardWidth, boardHeight);
+        }
+
+        const cortexGradient = ctx.createLinearGradient(0, offsetY, 0, offsetY + boardHeight);
+        cortexGradient.addColorStop(0, 'rgba(63, 78, 128, 0.85)');
+        cortexGradient.addColorStop(1, 'rgba(18, 24, 42, 0.92)');
+        ctx.fillStyle = cortexGradient;
+        ctx.fillRect(offsetX, offsetY, boardWidth, boardHeight);
+
+        if (brainPath) {
+            ctx.restore();
+        }
+        ctx.lineWidth = Math.max(3, blockSize * 0.16);
+        ctx.strokeStyle = 'rgba(203, 211, 255, 0.5)';
+        if (brainPath) {
+            ctx.shadowColor = 'rgba(12, 14, 26, 0.45)';
+            ctx.shadowBlur = Math.max(8, blockSize * 0.9);
+            ctx.shadowOffsetY = blockSize * 0.2;
+            ctx.stroke(brainPath);
+        } else {
+            ctx.strokeRect(offsetX, offsetY, boardWidth, boardHeight);
+        }
+        ctx.restore();
+
+        if (brainPath) {
+            ctx.save();
+            ctx.clip(brainPath);
+            drawBrainTexture(ctx, brainBounds);
+            ctx.strokeStyle = 'rgba(203, 211, 255, 0.08)';
+            ctx.lineWidth = Math.max(1, blockSize * 0.06);
+            for (let x = 1; x < COLS; x++) {
+                const lineX = offsetX + x * blockSize;
+                ctx.beginPath();
+                ctx.moveTo(lineX, offsetY);
+                ctx.lineTo(lineX, offsetY + boardHeight);
+                ctx.stroke();
+            }
+            for (let y = 1; y < ROWS; y++) {
+                const lineY = offsetY + y * blockSize;
+                ctx.beginPath();
+                ctx.moveTo(offsetX, lineY);
+                ctx.lineTo(offsetX + boardWidth, lineY);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        for (let y = 0; y < ROWS; y++) {
+            for (let x = 0; x < COLS; x++) {
+                const cell = board[y][x];
+                if (cell) {
+                    drawCell(x, y, cell.colorIndex, cell.wobblePhase);
+                }
+            }
+        }
+
+        return;
+    }
 
     const backdrop = ctx.createRadialGradient(
         width * 0.5,
@@ -633,6 +719,8 @@ function drawNextPiece() {
     previewPath.ellipse(nextCanvas.width / 2, nextCanvas.height / 2, radiusX, radiusY, 0, 0, Math.PI * 2);
 
     nextCtx.save();
+    nextCtx.fillStyle = 'rgba(6, 8, 16, 0.9)';
+    nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
     nextCtx.clip(previewPath);
     const previewGradient = nextCtx.createRadialGradient(
         nextCanvas.width * 0.48,
@@ -642,13 +730,13 @@ function drawNextPiece() {
         nextCanvas.height / 2,
         Math.max(radiusX, radiusY)
     );
-    previewGradient.addColorStop(0, 'rgba(255, 228, 244, 0.95)');
-    previewGradient.addColorStop(1, 'rgba(210, 120, 175, 0.55)');
+    previewGradient.addColorStop(0, 'rgba(92, 110, 184, 0.9)');
+    previewGradient.addColorStop(1, 'rgba(18, 24, 42, 0.9)');
     nextCtx.fillStyle = previewGradient;
     nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
 
-    nextCtx.strokeStyle = 'rgba(255, 255, 255, 0.2)';
-    nextCtx.lineWidth = Math.max(1, blockSize * 0.08);
+    nextCtx.strokeStyle = 'rgba(203, 211, 255, 0.3)';
+    nextCtx.lineWidth = Math.max(1.5, blockSize * 0.08);
     nextCtx.beginPath();
     nextCtx.ellipse(nextCanvas.width / 2, nextCanvas.height / 2, radiusX, radiusY, 0, 0, Math.PI * 2);
     nextCtx.stroke();
@@ -812,15 +900,40 @@ function update(time = 0) {
 
 function resizeCanvas() {
     if (!canvas) return;
-    const availableWidth = Math.min(window.innerWidth * 0.65, 420);
-    const availableHeight = Math.min(window.innerHeight * 0.6, 520);
-    const blockSize = Math.max(14, Math.floor(Math.min(availableWidth / COLS, availableHeight / ROWS)));
+    const brainRect = brainContainer ? brainContainer.getBoundingClientRect() : null;
+    let availableWidth = Math.min(window.innerWidth * 0.65, 420);
+    let availableHeight = Math.min(window.innerHeight * 0.6, 520);
+    if (brainRect && brainRect.width > 0 && brainRect.height > 0) {
+        availableWidth = brainRect.width;
+        availableHeight = brainRect.height;
+    }
+
+    let blockSize = Math.floor(Math.min(availableWidth / COLS, availableHeight / ROWS));
+    if (brainRect) {
+        blockSize = Math.max(4, blockSize);
+    } else {
+        blockSize = Math.max(14, blockSize);
+    }
+    if (blockSize <= 0) {
+        return;
+    }
+
     canvas.width = blockSize * COLS;
     canvas.height = blockSize * ROWS;
-    canvas.style.width = `${canvas.width}px`;
-    canvas.style.height = `${canvas.height}px`;
+    if (brainRect) {
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+    } else {
+        canvas.style.width = `${canvas.width}px`;
+        canvas.style.height = `${canvas.height}px`;
+    }
     if (nextCanvas) {
-        const previewSize = Math.max(90, Math.min(blockSize * 4, window.innerWidth * 0.25, window.innerHeight * 0.25));
+        let previewSize;
+        if (brainRect && brainRect.width > 0) {
+            previewSize = Math.max(110, Math.min(brainRect.width * 0.55, 200));
+        } else {
+            previewSize = Math.max(90, Math.min(blockSize * 4, window.innerWidth * 0.25, window.innerHeight * 0.25));
+        }
         nextCanvas.width = previewSize;
         nextCanvas.height = previewSize;
         nextCanvas.style.width = `${previewSize}px`;
@@ -932,6 +1045,7 @@ function closePopup() {
 function init() {
     canvas = document.getElementById('braintetris-canvas');
     nextCanvas = document.getElementById('braintetris-next');
+    brainContainer = document.getElementById('braintetris-brain');
     if (canvas) ctx = canvas.getContext('2d');
     if (nextCanvas) nextCtx = nextCanvas.getContext('2d');
     scoreDisplay = document.getElementById('braintetris-score');
