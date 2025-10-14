@@ -645,9 +645,9 @@ button:hover {
 
 .braintetris-brain {
     position: absolute;
-    top: 15%;
-    left: 34.5%;
-    width: 42%;
+    top: 12%;
+    left: 29.5%;
+    width: 50%;
     aspect-ratio: 1 / 2;
     display: flex;
     align-items: center;
@@ -706,9 +706,9 @@ button:hover {
 
 @media (max-width: 640px) {
     .braintetris-brain {
-        top: 18%;
-        left: 32%;
-        width: 48%;
+        top: 14%;
+        left: 27%;
+        width: 56%;
         aspect-ratio: 1 / 2;
     }
 }
