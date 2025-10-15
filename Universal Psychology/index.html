@@ -172,6 +172,26 @@
             </div>
         </div>
 
+    <!-- Flappy Freud Popup -->
+        <div id="flappyfreud-popup" class="popup-overlay" aria-hidden="true">
+            <div id="flappyfreud-content" role="dialog" aria-modal="true" aria-labelledby="flappyfreud-title">
+                <div class="flappyfreud-header">
+                    <div class="flappyfreud-title">
+                        <h2 id="flappyfreud-title">Flappy Freud</h2>
+                        <p id="flappyfreud-message">Press space or tap to start flying.</p>
+                    </div>
+                    <button id="close-flappyfreud" class="flappyfreud-close" aria-label="Close Flappy Freud">&times;</button>
+                </div>
+                <div class="flappyfreud-scoreboard">
+                    <span id="flappyfreud-score">Score: 0</span>
+                    <span id="flappyfreud-best">Best: 0</span>
+                </div>
+                <canvas id="flappyfreud-canvas" width="420" height="560"></canvas>
+                <div id="flappyfreud-controls">Space/↑ to flap · Enter to restart · Esc to exit</div>
+                <button id="start-flappyfreud" class="flappyfreud-start">Start Flight</button>
+            </div>
+        </div>
+
     <!-- NeuroSnake Popup -->
         <div id="neurosnake-popup" class="popup-overlay">
             <div id="neurosnake-content">
