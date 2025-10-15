@@ -31,6 +31,17 @@ const GAME_SETTINGS = {
         curve2: { x1: 62, y1: 20, x2: 0, y2: 14 },
         color: 'rgba(255, 255, 255, 0.85)'
     },
+    arms: {
+        shoulderXFactor: 0.62,
+        shoulderYFactor: -0.1,
+        lengthFactor: 1.32,
+        elbowLiftFactor: 0.55,
+        handRadiusFactor: 0.22,
+        lineWidthFactor: 0.2,
+        baseRotation: -0.1,
+        animMagnitude: 0.5,
+        animSpeedFactor: 4.6
+    },
     layout: {
         pipeCapHeight: 18,
         pipeShadowWidth: 10,
@@ -69,6 +80,18 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     const ctx = canvas.getContext('2d');
+    const freudImage = new Image();
+    let isFreudImageLoaded = false;
+
+    freudImage.addEventListener('load', () => {
+        isFreudImageLoaded = true;
+    });
+
+    freudImage.addEventListener('error', () => {
+        console.warn('Failed to load Flappy Freud image at images/freud.png');
+    });
+
+    freudImage.src = 'images/freud.png';
     const state = {
         isPopupOpen: false,
         isRunning: false,
@@ -468,30 +491,40 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.translate(freud.x, freud.y);
         ctx.rotate(freud.tilt);
 
-        drawWing(1);
-        drawWing(-1);
+        if (isFreudImageLoaded && freudImage.naturalWidth && freudImage.naturalHeight) {
+            const targetDiameter = freud.radius * 2.4;
+            const scale = targetDiameter / Math.max(freudImage.naturalWidth, freudImage.naturalHeight);
+            const drawWidth = freudImage.naturalWidth * scale;
+            const drawHeight = freudImage.naturalHeight * scale;
+            ctx.drawImage(freudImage, -drawWidth / 2, -drawHeight / 2, drawWidth, drawHeight);
+        } else {
+            drawWing(1);
+            drawWing(-1);
 
-        ctx.fillStyle = GAME_SETTINGS.visuals.freudBody;
-        ctx.strokeStyle = GAME_SETTINGS.visuals.freudOutline;
-        ctx.lineWidth = 3;
-        ctx.beginPath();
-        ctx.ellipse(0, 0, freud.radius * 1.1, freud.radius, 0, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.stroke();
+            ctx.fillStyle = GAME_SETTINGS.visuals.freudBody;
+            ctx.strokeStyle = GAME_SETTINGS.visuals.freudOutline;
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.ellipse(0, 0, freud.radius * 1.1, freud.radius, 0, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.stroke();
 
-        ctx.fillStyle = GAME_SETTINGS.visuals.freudEye;
-        ctx.beginPath();
-        ctx.arc(freud.radius * 0.35, -freud.radius * 0.1, freud.radius * 0.18, 0, Math.PI * 2);
-        ctx.fill();
+            ctx.fillStyle = GAME_SETTINGS.visuals.freudEye;
+            ctx.beginPath();
+            ctx.arc(freud.radius * 0.35, -freud.radius * 0.1, freud.radius * 0.18, 0, Math.PI * 2);
+            ctx.fill();
 
-        ctx.fillStyle = GAME_SETTINGS.visuals.moustache;
-        ctx.beginPath();
-        ctx.moveTo(-freud.radius * 0.25, freud.radius * 0.15);
-        ctx.quadraticCurveTo(0, freud.radius * 0.45, freud.radius * 0.6, freud.radius * 0.15);
-        ctx.quadraticCurveTo(freud.radius * 0.35, freud.radius * 0.35, 0, freud.radius * 0.18);
-        ctx.quadraticCurveTo(-freud.radius * 0.35, freud.radius * 0.35, -freud.radius * 0.6, freud.radius * 0.15);
-        ctx.closePath();
-        ctx.fill();
+            ctx.fillStyle = GAME_SETTINGS.visuals.moustache;
+            ctx.beginPath();
+            ctx.moveTo(-freud.radius * 0.25, freud.radius * 0.15);
+            ctx.quadraticCurveTo(0, freud.radius * 0.45, freud.radius * 0.6, freud.radius * 0.15);
+            ctx.quadraticCurveTo(freud.radius * 0.35, freud.radius * 0.35, 0, freud.radius * 0.18);
+            ctx.quadraticCurveTo(-freud.radius * 0.35, freud.radius * 0.35, -freud.radius * 0.6, freud.radius * 0.15);
+            ctx.closePath();
+            ctx.fill();
+        }
+
+        drawArms();
 
         ctx.restore();
     }
@@ -510,6 +543,44 @@ document.addEventListener('DOMContentLoaded', () => {
         ctx.quadraticCurveTo(config.curve2.x1, config.curve2.y1, config.curve2.x2, config.curve2.y2);
         ctx.closePath();
         ctx.fill();
+        ctx.restore();
+    }
+
+    function drawArms() {
+        drawArm(1);
+        drawArm(-1);
+    }
+
+    function drawArm(direction) {
+        const config = GAME_SETTINGS.arms;
+        const radius = state.freud.radius;
+        ctx.save();
+        ctx.scale(direction, 1);
+        ctx.translate(radius * config.shoulderXFactor, radius * config.shoulderYFactor);
+        const animationOffset = Math.sin(state.wingPhase * config.animSpeedFactor + direction) * config.animMagnitude;
+        ctx.rotate(config.baseRotation + animationOffset);
+
+        const length = radius * config.lengthFactor;
+        const elbowLift = radius * config.elbowLiftFactor;
+        const handRadius = radius * config.handRadiusFactor;
+        const lineWidth = radius * config.lineWidthFactor;
+
+        ctx.lineCap = 'round';
+        ctx.lineJoin = 'round';
+        ctx.lineWidth = lineWidth;
+        ctx.strokeStyle = GAME_SETTINGS.visuals.freudOutline;
+        ctx.fillStyle = GAME_SETTINGS.visuals.freudBody;
+
+        ctx.beginPath();
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(length * 0.45, -elbowLift, length, 0);
+        ctx.stroke();
+
+        ctx.beginPath();
+        ctx.arc(length, 0, handRadius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+
         ctx.restore();
     }
 });
