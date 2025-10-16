@@ -10,7 +10,7 @@ const GAME_CONFIG = {
         maxGap: 60
     },
     sundgren: {
-        baseWidth: 220,
+        baseWidth: 150,
         speed: 440,
         floorPadding: 36
     },
@@ -121,7 +121,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function recalcSundgrenSize() {
         if (!sundgrenReady) return;
-        const desiredWidth = Math.min(GAME_CONFIG.sundgren.baseWidth, canvas.width * 0.42);
+        const desiredWidth = Math.min(GAME_CONFIG.sundgren.baseWidth, canvas.width * 0.32);
         const ratio = sundgrenImage.height ? desiredWidth / sundgrenImage.width : 1;
         sundgren.width = desiredWidth;
         sundgren.height = sundgrenImage.height ? sundgrenImage.height * ratio : desiredWidth;
