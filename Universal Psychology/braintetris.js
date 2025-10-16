@@ -1,7 +1,7 @@
 // Brain Tetris - a squishy pink twist on the classic
 
-const COLS = 10;
-const ROWS = 20;
+const COLS = 12;
+const ROWS = 12;
 const INITIAL_DROP_INTERVAL = 800; // milliseconds
 const MIN_DROP_INTERVAL = 120;
 const DROP_INTERVAL_STEP = 70;
