@@ -7,12 +7,20 @@ const GAME_CONFIG = {
     mouth: {
         openSpeed: 320,
         closeSpeed: 520,
-        maxGap: 60
+        maxGap: 60,
+        chewBites: 2,
+        catchStretch: 0.85
     },
     sundgren: {
         baseWidth: 120,
         speed: 440,
-        floorPadding: 36
+        floorPadding: 36,
+        splitRatio: 0.75,
+        movementTilt: 0.18,
+        tiltSmoothing: 12,
+        tiltDamping: 8,
+        maxTilt: 0.4,
+        chewTiltImpulse: 4
     },
     floatingTextDuration: 780
 };
@@ -95,7 +103,11 @@ document.addEventListener('DOMContentLoaded', () => {
         height: GAME_CONFIG.sundgren.baseWidth,
         top: canvas.height - GAME_CONFIG.sundgren.baseWidth - GAME_CONFIG.sundgren.floorPadding,
         mouthGap: 0,
-        mouthState: 'closed'
+        mouthState: 'closed',
+        chewRemaining: 0,
+        rotation: 0,
+        rotationVelocity: 0,
+        targetRotation: 0
     };
 
     const keys = new Set();
@@ -147,6 +159,10 @@ document.addEventListener('DOMContentLoaded', () => {
         state.lastTimestamp = performance.now();
         sundgren.mouthGap = 0;
         sundgren.mouthState = 'closed';
+        sundgren.chewRemaining = 0;
+        sundgren.rotation = 0;
+        sundgren.rotationVelocity = 0;
+        sundgren.targetRotation = 0;
         keys.clear();
         pointerActive = false;
         updateScoreboard();
@@ -232,6 +248,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function update(deltaMs) {
         const deltaSeconds = deltaMs / 1000;
         updateMovement(deltaSeconds);
+        updateTilt(deltaSeconds);
         updateMouth(deltaMs);
         updateSnacks(deltaSeconds);
         updateFloatingText(deltaMs);
@@ -244,7 +261,26 @@ document.addEventListener('DOMContentLoaded', () => {
         if (moveDirection !== 0) {
             const distance = moveDirection * GAME_CONFIG.sundgren.speed * deltaSeconds;
             sundgren.x = clamp(sundgren.x + distance, 0, canvas.width - sundgren.width);
+            const target = clamp(
+                moveDirection * GAME_CONFIG.sundgren.movementTilt,
+                -GAME_CONFIG.sundgren.maxTilt,
+                GAME_CONFIG.sundgren.maxTilt
+            );
+            sundgren.targetRotation = target;
+        } else if (!pointerActive) {
+            sundgren.targetRotation = 0;
         }
+    }
+
+    function updateTilt(deltaSeconds) {
+        const config = GAME_CONFIG.sundgren;
+        const delta = sundgren.targetRotation - sundgren.rotation;
+        sundgren.rotationVelocity += delta * config.tiltSmoothing * deltaSeconds;
+        sundgren.rotationVelocity *= Math.max(0, 1 - config.tiltDamping * deltaSeconds);
+        const maxVelocity = config.maxTilt * 4;
+        sundgren.rotationVelocity = clamp(sundgren.rotationVelocity, -maxVelocity, maxVelocity);
+        sundgren.rotation += sundgren.rotationVelocity * deltaSeconds;
+        sundgren.rotation = clamp(sundgren.rotation, -config.maxTilt, config.maxTilt);
     }
 
     function updateMouth(deltaMs) {
@@ -258,7 +294,13 @@ document.addEventListener('DOMContentLoaded', () => {
             sundgren.mouthGap -= GAME_CONFIG.mouth.closeSpeed * (deltaMs / 1000);
             if (sundgren.mouthGap <= 0) {
                 sundgren.mouthGap = 0;
-                sundgren.mouthState = 'closed';
+                if (sundgren.chewRemaining > 1) {
+                    sundgren.chewRemaining -= 1;
+                    sundgren.mouthState = 'opening';
+                } else {
+                    sundgren.chewRemaining = 0;
+                    sundgren.mouthState = 'closed';
+                }
             }
         }
     }
@@ -271,11 +313,12 @@ document.addEventListener('DOMContentLoaded', () => {
             state.nextSpawn = randomBetween(GAME_CONFIG.spawnInterval.min, GAME_CONFIG.spawnInterval.max);
         }
 
-        const mouthCenterY = sundgren.top + sundgren.height / 2;
+        const splitRatio = GAME_CONFIG.sundgren.splitRatio;
+        const mouthLineY = sundgren.top + sundgren.height * splitRatio;
         const mouthLeft = sundgren.x + sundgren.width * 0.25;
         const mouthRight = sundgren.x + sundgren.width * 0.75;
-        const catchZoneTop = mouthCenterY - 18;
-        const catchZoneBottom = mouthCenterY + 18 + sundgren.mouthGap * 0.6;
+        const catchZoneTop = mouthLineY - 18;
+        const catchZoneBottom = mouthLineY + 18 + sundgren.mouthGap * GAME_CONFIG.mouth.catchStretch;
         const groundLevel = canvas.height - GAME_CONFIG.sundgren.floorPadding * 0.35;
 
         for (let i = state.snacks.length - 1; i >= 0; i--) {
@@ -337,6 +380,14 @@ document.addEventListener('DOMContentLoaded', () => {
     function handleSnackCaught(snack) {
         state.score += snack.type.score;
         sundgren.mouthState = 'opening';
+        sundgren.chewRemaining = Math.max(GAME_CONFIG.mouth.chewBites, 1);
+        const tiltDirection = Math.random() < 0.5 ? -1 : 1;
+        sundgren.rotationVelocity += tiltDirection * GAME_CONFIG.sundgren.chewTiltImpulse;
+        sundgren.targetRotation = clamp(
+            sundgren.targetRotation + tiltDirection * GAME_CONFIG.sundgren.movementTilt * 0.6,
+            -GAME_CONFIG.sundgren.maxTilt,
+            GAME_CONFIG.sundgren.maxTilt
+        );
         state.floatingText.push({
             x: snack.x,
             y: snack.y,
@@ -461,39 +512,54 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function drawSundgren() {
+        const splitRatio = GAME_CONFIG.sundgren.splitRatio;
+        const topHeight = sundgren.height * splitRatio;
+        const bottomHeight = sundgren.height - topHeight;
+        const mouthGap = sundgren.mouthGap;
+        const topY = sundgren.top - mouthGap / 2;
+        const bottomY = sundgren.top + topHeight + mouthGap / 2;
+        const centerX = sundgren.x + sundgren.width / 2;
+        const centerY = sundgren.top + sundgren.height / 2;
+
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(sundgren.rotation);
+        ctx.translate(-centerX, -centerY);
+
         if (!sundgrenReady) {
             ctx.fillStyle = '#d0c4ff';
             ctx.fillRect(sundgren.x, sundgren.top, sundgren.width, sundgren.height);
+            ctx.restore();
             return;
         }
 
-        const halfHeight = sundgren.height / 2;
-        const mouthGap = sundgren.mouthGap;
-        const topY = sundgren.top - mouthGap / 2;
-        const bottomY = sundgren.top + halfHeight + mouthGap / 2;
+        const imageTopHeight = sundgrenImage.height * splitRatio;
+        const imageBottomHeight = sundgrenImage.height - imageTopHeight;
 
         ctx.drawImage(
             sundgrenImage,
             0,
             0,
             sundgrenImage.width,
-            sundgrenImage.height / 2,
+            imageTopHeight,
             sundgren.x,
             topY,
             sundgren.width,
-            halfHeight
+            topHeight
         );
         ctx.drawImage(
             sundgrenImage,
             0,
-            sundgrenImage.height / 2,
+            imageTopHeight,
             sundgrenImage.width,
-            sundgrenImage.height / 2,
+            imageBottomHeight,
             sundgren.x,
             bottomY,
             sundgren.width,
-            halfHeight
+            bottomHeight
         );
+
+        ctx.restore();
     }
 
     function drawFloatingText() {
@@ -518,7 +584,20 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function moveSundgrenTo(positionX) {
+        const previousX = sundgren.x;
         sundgren.x = clamp(positionX - sundgren.width / 2, 0, canvas.width - sundgren.width);
+        const deltaX = sundgren.x - previousX;
+        if (Math.abs(deltaX) > 1) {
+            const normalized = clamp(deltaX / (sundgren.width * 0.6), -1, 1);
+            const tilt = normalized * GAME_CONFIG.sundgren.movementTilt;
+            sundgren.targetRotation = clamp(tilt, -GAME_CONFIG.sundgren.maxTilt, GAME_CONFIG.sundgren.maxTilt);
+        } else if (!hasMovementKeys()) {
+            sundgren.targetRotation = 0;
+        }
+    }
+
+    function hasMovementKeys() {
+        return ['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].some(code => keys.has(code));
     }
 
     function handlePointer(event) {
@@ -555,6 +634,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!state.isPopupOpen) return;
         if (['ArrowLeft', 'ArrowRight', 'KeyA', 'KeyD'].includes(event.code)) {
             keys.delete(event.code);
+            if (!pointerActive && !hasMovementKeys()) {
+                sundgren.targetRotation = 0;
+            }
         }
     });
 
@@ -570,10 +652,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     canvas.addEventListener('pointerup', () => {
         pointerActive = false;
+        if (!hasMovementKeys()) {
+            sundgren.targetRotation = 0;
+        }
     });
 
     canvas.addEventListener('pointerleave', () => {
         pointerActive = false;
+        if (!hasMovementKeys()) {
+            sundgren.targetRotation = 0;
+        }
     });
 
     window.addEventListener('resize', () => {
