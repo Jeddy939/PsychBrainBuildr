@@ -309,7 +309,10 @@ function createBrainPath(width, height) {
 function computeBoardMetrics(width, height) {
     const usingSilhouette = Boolean(brainContainer);
     const brainBounds = getBrainBounds(width, height);
-    const blockSize = Math.min(brainBounds.width / COLS, brainBounds.height / ROWS);
+    // Shrink the playable grid slightly so the full board stays inside the brain outline
+    const boardPadding = 0.9;
+    const baseBlockSize = Math.min(brainBounds.width / COLS, brainBounds.height / ROWS);
+    const blockSize = baseBlockSize * boardPadding;
     const boardWidth = blockSize * COLS;
     const boardHeight = blockSize * ROWS;
     const offsetX = brainBounds.x + (brainBounds.width - boardWidth) / 2;
