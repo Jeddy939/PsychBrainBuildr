@@ -202,6 +202,27 @@
             </div>
         </div>
 
+    <!-- Feed Sundgren Popup -->
+        <div id="feedsundgren-popup" class="popup-overlay" aria-hidden="true">
+            <div id="feedsundgren-content" role="dialog" aria-modal="true" aria-labelledby="feedsundgren-title">
+                <div class="feedsundgren-header">
+                    <div class="feedsundgren-title">
+                        <h2 id="feedsundgren-title">Feed Sundgren</h2>
+                        <p id="feedsundgren-message">Catch the falling snacks before they hit the ground.</p>
+                    </div>
+                    <button id="close-feedsundgren" class="feedsundgren-close" aria-label="Close Feed Sundgren">&times;</button>
+                </div>
+                <div class="feedsundgren-scoreboard">
+                    <span id="feedsundgren-score">Snacks: 0</span>
+                    <span id="feedsundgren-missed">Missed: 0/5</span>
+                    <span id="feedsundgren-best">Best: 0</span>
+                </div>
+                <canvas id="feedsundgren-canvas" width="480" height="600" aria-label="Feed Sundgren playfield"></canvas>
+                <div id="feedsundgren-controls">Use ←/→ or A/D to move. Tap or drag to position Sundgren.</div>
+                <button id="start-feedsundgren" class="feedsundgren-start">Start Feeding</button>
+            </div>
+        </div>
+
     <!-- Instructions Overlay -->
         <div id="instructions-overlay">
             <div id="instructions-content">
