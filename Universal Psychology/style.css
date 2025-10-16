@@ -715,7 +715,7 @@ button:hover {
 
 #feedsundgren-content {
     position: relative;
-    width: min(92vw, 720px);
+    width: min(94vw, 880px);
     max-height: 92vh;
     background: rgba(18, 14, 27, 0.92);
     border-radius: 22px;
