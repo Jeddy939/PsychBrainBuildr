@@ -1,3 +1,30 @@
+const MENTAL_OBSTACLES = [
+    'Repression',
+    'Projection',
+    'Denial',
+    'Oedipus Complex',
+    'Superego Guilt',
+    'Transference',
+    'Countertransference',
+    'Thanatos Drive',
+    'Eros Overload',
+    'Fixation at Oral Stage',
+    'Fixation at Anal Stage',
+    'Fixation at Phallic Stage',
+    'Latent Desires',
+    'Dream Symbolism',
+    'Freudian Slip',
+    'Infantile Sexuality',
+    'Defense Mechanisms',
+    'Unresolved Complex',
+    'Pleasure Principle',
+    'Reality Principle',
+    'Id Impulses',
+    'Ego Anxiety',
+    'Symbolic Substitution',
+    'Psychic Conflict'
+];
+
 const GAME_SETTINGS = {
     storageKey: 'flappyFreudBestScore',
     physics: {
@@ -37,10 +64,18 @@ const GAME_SETTINGS = {
         lengthFactor: 1.32,
         elbowLiftFactor: 0.55,
         handRadiusFactor: 0.22,
-        lineWidthFactor: 0.2,
+        lineWidthFactor: 0.26,
         baseRotation: -0.1,
         animMagnitude: 0.5,
-        animSpeedFactor: 4.6
+        animSpeedFactor: 4.6,
+        sleeveColor: '#101010',
+        sleeveOutline: '#262626',
+        cuffColor: '#f5f5f5',
+        cuffWidthFactor: 0.52,
+        handColor: '#f6d4b4',
+        handOutline: '#2c1a10',
+        handOffsetFactor: 0.8,
+        fingerSeparationFactor: 0.55
     },
     layout: {
         pipeCapHeight: 18,
@@ -105,6 +140,7 @@ document.addEventListener('DOMContentLoaded', () => {
         score: 0,
         best: loadBestScore(),
         pipes: [],
+        lastObstacle: null,
         freud: {
             x: 0,
             y: 0,
@@ -207,6 +243,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function resetGame() {
         state.score = 0;
         state.pipes = [];
+        state.lastObstacle = null;
         state.freud.radius = GAME_SETTINGS.freud.radius;
         state.freud.velocity = 0;
         state.freud.tilt = 0;
@@ -390,8 +427,25 @@ document.addEventListener('DOMContentLoaded', () => {
         state.pipes.push({
             x: state.viewportWidth + spawnConfig.xOffset,
             gapCenter,
-            passed: false
+            passed: false,
+            label: getNextObstacleLabel()
         });
+    }
+
+    function getNextObstacleLabel() {
+        if (MENTAL_OBSTACLES.length === 0) {
+            return '';
+        }
+        let choice = MENTAL_OBSTACLES[Math.floor(Math.random() * MENTAL_OBSTACLES.length)];
+        if (MENTAL_OBSTACLES.length > 1) {
+            let safety = 0;
+            while (choice === state.lastObstacle && safety < 10) {
+                choice = MENTAL_OBSTACLES[Math.floor(Math.random() * MENTAL_OBSTACLES.length)];
+                safety += 1;
+            }
+        }
+        state.lastObstacle = choice;
+        return choice;
     }
 
     function detectCollisions() {
@@ -470,7 +524,135 @@ document.addEventListener('DOMContentLoaded', () => {
                 GAME_SETTINGS.layout.pipeShadowWidth,
                 state.viewportHeight - bottomPipeY - physics.groundHeight
             );
+
+            drawPipeLabel(pipe, x, topPipeHeight, bottomPipeY);
         });
+    }
+
+    function drawPipeLabel(pipe, pipeX, topPipeHeight, bottomPipeY) {
+        if (!pipe.label) {
+            return;
+        }
+
+        const availableWidth = physics.pipeWidth - 18;
+        const topAreaHeight = Math.max(0, topPipeHeight - GAME_SETTINGS.layout.pipeCapHeight - 18);
+        const bottomAreaHeight = Math.max(
+            0,
+            (state.viewportHeight - physics.groundHeight) - (bottomPipeY + GAME_SETTINGS.layout.pipeCapHeight) - 18
+        );
+
+        let areaY;
+        let areaHeight;
+        if (topAreaHeight >= bottomAreaHeight && topAreaHeight > 28) {
+            areaY = 12;
+            areaHeight = topAreaHeight;
+        } else if (bottomAreaHeight > 28) {
+            areaY = bottomPipeY + GAME_SETTINGS.layout.pipeCapHeight + 12;
+            areaHeight = bottomAreaHeight;
+        } else {
+            areaY = Math.max(12, topAreaHeight > 0 ? 12 : bottomPipeY + GAME_SETTINGS.layout.pipeCapHeight + 12);
+            areaHeight = Math.max(28, Math.max(topAreaHeight, bottomAreaHeight));
+        }
+
+        const centerX = pipeX + physics.pipeWidth / 2;
+        const { fontSize, lines, lineHeight } = calculateLabelLayout(pipe.label, availableWidth, areaHeight);
+        if (!lines.length) {
+            return;
+        }
+
+        const totalHeight = lines.length * lineHeight;
+        const textTop = areaY + areaHeight / 2 - totalHeight / 2;
+        const padding = Math.max(6, fontSize * 0.4);
+        const backgroundTop = textTop - padding / 2;
+        const backgroundHeight = totalHeight + padding;
+        const backgroundWidth = availableWidth + padding;
+        const backgroundLeft = centerX - backgroundWidth / 2;
+
+        ctx.save();
+        ctx.fillStyle = 'rgba(250, 250, 245, 0.88)';
+        ctx.strokeStyle = 'rgba(33, 66, 38, 0.45)';
+        ctx.lineWidth = 2;
+        drawRoundedRect(backgroundLeft, backgroundTop, backgroundWidth, backgroundHeight, Math.min(12, padding));
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#15311b';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.font = `600 ${fontSize}px "Comic Sans MS", "Baloo 2", sans-serif`;
+
+        let currentY = textTop + lineHeight / 2;
+        for (const line of lines) {
+            ctx.fillText(line, centerX, currentY);
+            currentY += lineHeight;
+        }
+
+        ctx.restore();
+    }
+
+    function calculateLabelLayout(text, maxWidth, maxHeight) {
+        const context = ctx;
+        const maxFont = Math.min(26, Math.max(14, physics.pipeWidth * 0.32));
+        const minFont = 10;
+        const fontFamily = '"Comic Sans MS", "Baloo 2", sans-serif';
+        let fontSize = maxFont;
+        let lines = [];
+        let lineHeight = 0;
+
+        while (fontSize >= minFont) {
+            context.font = `600 ${fontSize}px ${fontFamily}`;
+            lines = wrapTextLines(text, maxWidth);
+            lineHeight = fontSize * 1.18;
+            const neededHeight = lines.length * lineHeight;
+            if (neededHeight <= maxHeight || fontSize === minFont) {
+                if (neededHeight > maxHeight && lines.length > 1) {
+                    const maxLines = Math.max(1, Math.floor(maxHeight / lineHeight));
+                    lines = lines.slice(0, maxLines);
+                }
+                break;
+            }
+            fontSize -= 1;
+        }
+
+        return { fontSize, lines, lineHeight };
+    }
+
+    function wrapTextLines(text, maxWidth) {
+        const words = text.split(' ');
+        const lines = [];
+        let currentLine = '';
+
+        for (const word of words) {
+            const testLine = currentLine ? `${currentLine} ${word}` : word;
+            const { width } = ctx.measureText(testLine);
+            if (width <= maxWidth || !currentLine) {
+                currentLine = testLine;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
+        }
+
+        if (currentLine) {
+            lines.push(currentLine);
+        }
+
+        return lines;
+    }
+
+    function drawRoundedRect(x, y, width, height, radius) {
+        const cornerRadius = Math.max(0, Math.min(radius, Math.min(width, height) / 2));
+        ctx.beginPath();
+        ctx.moveTo(x + cornerRadius, y);
+        ctx.lineTo(x + width - cornerRadius, y);
+        ctx.quadraticCurveTo(x + width, y, x + width, y + cornerRadius);
+        ctx.lineTo(x + width, y + height - cornerRadius);
+        ctx.quadraticCurveTo(x + width, y + height, x + width - cornerRadius, y + height);
+        ctx.lineTo(x + cornerRadius, y + height);
+        ctx.quadraticCurveTo(x, y + height, x, y + height - cornerRadius);
+        ctx.lineTo(x, y + cornerRadius);
+        ctx.quadraticCurveTo(x, y, x + cornerRadius, y);
+        ctx.closePath();
     }
 
     function drawGround() {
@@ -563,22 +745,55 @@ document.addEventListener('DOMContentLoaded', () => {
         const length = radius * config.lengthFactor;
         const elbowLift = radius * config.elbowLiftFactor;
         const handRadius = radius * config.handRadiusFactor;
-        const lineWidth = radius * config.lineWidthFactor;
+        const sleeveWidth = radius * config.lineWidthFactor;
+        const sleeveEnd = length - handRadius * config.handOffsetFactor;
+        const cuffWidth = Math.max(1.2, sleeveWidth * config.cuffWidthFactor);
+        const handCenterX = length + handRadius * 0.1;
 
+        // Draw sleeve
         ctx.lineCap = 'round';
         ctx.lineJoin = 'round';
-        ctx.lineWidth = lineWidth;
-        ctx.strokeStyle = GAME_SETTINGS.visuals.freudOutline;
-        ctx.fillStyle = GAME_SETTINGS.visuals.freudBody;
-
+        ctx.lineWidth = sleeveWidth;
+        ctx.strokeStyle = config.sleeveColor;
         ctx.beginPath();
         ctx.moveTo(0, 0);
-        ctx.quadraticCurveTo(length * 0.45, -elbowLift, length, 0);
+        ctx.quadraticCurveTo(sleeveEnd * 0.45, -elbowLift, sleeveEnd, 0);
         ctx.stroke();
 
+        // Sleeve outline for definition
+        ctx.lineWidth = Math.max(1.2, sleeveWidth * 0.22);
+        ctx.strokeStyle = config.sleeveOutline;
         ctx.beginPath();
-        ctx.arc(length, 0, handRadius, 0, Math.PI * 2);
+        ctx.moveTo(0, 0);
+        ctx.quadraticCurveTo(sleeveEnd * 0.45, -elbowLift, sleeveEnd, 0);
+        ctx.stroke();
+
+        // Cuff accent
+        ctx.lineWidth = cuffWidth;
+        ctx.strokeStyle = config.cuffColor;
+        ctx.beginPath();
+        ctx.moveTo(sleeveEnd - cuffWidth * 0.4, 0);
+        ctx.lineTo(sleeveEnd + cuffWidth * 0.4, 0);
+        ctx.stroke();
+
+        // Hand
+        ctx.fillStyle = config.handColor;
+        ctx.strokeStyle = config.handOutline;
+        ctx.lineWidth = Math.max(1.4, sleeveWidth * 0.18);
+        ctx.beginPath();
+        ctx.arc(handCenterX, 0, handRadius, 0, Math.PI * 2);
         ctx.fill();
+        ctx.stroke();
+
+        // Simple finger separations for cartoon styling
+        const fingerLength = handRadius * 1.05;
+        const fingerSpread = config.fingerSeparationFactor * handRadius;
+        ctx.lineWidth = Math.max(1, sleeveWidth * 0.16);
+        ctx.beginPath();
+        ctx.moveTo(handCenterX + fingerSpread * 0.2, -handRadius * 0.6);
+        ctx.quadraticCurveTo(handCenterX + fingerLength, -handRadius * 0.15, handCenterX + fingerSpread * 0.6, handRadius * 0.05);
+        ctx.moveTo(handCenterX + fingerSpread * 0.05, 0);
+        ctx.quadraticCurveTo(handCenterX + fingerLength * 0.8, handRadius * 0.2, handCenterX + fingerSpread * 0.45, handRadius * 0.55);
         ctx.stroke();
 
         ctx.restore();
