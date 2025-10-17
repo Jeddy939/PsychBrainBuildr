@@ -226,10 +226,33 @@ document.addEventListener('DOMContentLoaded', () => {
             saveBestScore(state.best);
         }
         updateScoreboard();
+        awardPsychbucks();
         startButton.textContent = 'Play Again';
         startButton.disabled = false;
         startButton.style.display = 'inline-block';
         messageLabel.textContent = 'Sundgren is still hungry! Try again to beat your best score.';
+    }
+
+    function awardPsychbucks() {
+        const reward = Math.max(0, Math.floor(state.score));
+        if (reward <= 0) {
+            return;
+        }
+        const api = window.GameAPI;
+        if (!api || typeof api.getGameState !== 'function') {
+            return;
+        }
+        const globalState = api.getGameState();
+        if (!globalState || typeof globalState.psychbucks !== 'number') {
+            return;
+        }
+        globalState.psychbucks += reward;
+        if (typeof api.updateDisplays === 'function') {
+            api.updateDisplays();
+        }
+        if (typeof api.logMessage === 'function') {
+            api.logMessage(`Feed Sundgren: Served ${state.score} snacks. +${reward} Psychbucks`, 'log-info');
+        }
     }
 
     function scheduleNextFrame() {
