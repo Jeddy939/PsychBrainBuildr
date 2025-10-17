@@ -2,7 +2,11 @@ const GAME_CONFIG = {
     storageKey: 'feedSundgrenBestScore',
     spawnInterval: { min: 520, max: 1200 },
     maxMisses: 5,
-    snackGravity: 360,
+    snack: {
+        initialGravity: 220,
+        maxGravity: 540,
+        rampDuration: 80
+    },
     snackHorizontalDrift: 24,
     mouth: {
         openSpeed: 320,
@@ -12,7 +16,7 @@ const GAME_CONFIG = {
         catchStretch: 0.85
     },
     sundgren: {
-        baseWidth: 120,
+        baseWidth: 96,
         speed: 440,
         floorPadding: 36,
         splitRatio: 0.75,
@@ -94,7 +98,8 @@ document.addEventListener('DOMContentLoaded', () => {
         missed: 0,
         best: loadBestScore(),
         snacks: [],
-        floatingText: []
+        floatingText: [],
+        elapsedTime: 0
     };
 
     const sundgren = {
@@ -133,7 +138,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function recalcSundgrenSize() {
         if (!sundgrenReady) return;
-        const desiredWidth = Math.min(GAME_CONFIG.sundgren.baseWidth, canvas.width * 0.24);
+        const desiredWidth = Math.min(GAME_CONFIG.sundgren.baseWidth, canvas.width * 0.2);
         const ratio = sundgrenImage.height ? desiredWidth / sundgrenImage.width : 1;
         sundgren.width = desiredWidth;
         sundgren.height = sundgrenImage.height ? sundgrenImage.height * ratio : desiredWidth;
@@ -143,6 +148,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function clamp(value, min, max) {
         return Math.max(min, Math.min(max, value));
+    }
+
+    function lerp(start, end, t) {
+        return start + (end - start) * t;
     }
 
     function randomBetween(min, max) {
@@ -157,6 +166,7 @@ document.addEventListener('DOMContentLoaded', () => {
         state.spawnTimer = 0;
         state.nextSpawn = randomBetween(GAME_CONFIG.spawnInterval.min, GAME_CONFIG.spawnInterval.max);
         state.lastTimestamp = performance.now();
+        state.elapsedTime = 0;
         sundgren.mouthGap = 0;
         sundgren.mouthState = 'closed';
         sundgren.chewRemaining = 0;
@@ -247,6 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function update(deltaMs) {
         const deltaSeconds = deltaMs / 1000;
+        state.elapsedTime += deltaSeconds;
         updateMovement(deltaSeconds);
         updateTilt(deltaSeconds);
         updateMouth(deltaMs);
@@ -315,10 +326,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const splitRatio = GAME_CONFIG.sundgren.splitRatio;
         const mouthLineY = sundgren.top + sundgren.height * splitRatio;
-        const mouthLeft = sundgren.x + sundgren.width * 0.25;
-        const mouthRight = sundgren.x + sundgren.width * 0.75;
-        const catchZoneTop = mouthLineY - 18;
-        const catchZoneBottom = mouthLineY + 18 + sundgren.mouthGap * GAME_CONFIG.mouth.catchStretch;
+        const mouthLeft = sundgren.x + sundgren.width * 0.18;
+        const mouthRight = sundgren.x + sundgren.width * 0.82;
+        const catchZoneTop = mouthLineY - 28;
+        const catchZoneBottom = mouthLineY + 36 + sundgren.mouthGap * GAME_CONFIG.mouth.catchStretch;
         const groundLevel = canvas.height - GAME_CONFIG.sundgren.floorPadding * 0.35;
 
         for (let i = state.snacks.length - 1; i >= 0; i--) {
@@ -362,7 +373,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const type = SNACK_TYPES[Math.floor(Math.random() * SNACK_TYPES.length)];
         const radius = type.radius + (Math.random() * 4 - 2);
         const x = clamp(Math.random() * canvas.width, radius, canvas.width - radius);
-        const velocityY = (GAME_CONFIG.snackGravity + Math.random() * 180) * (0.7 + type.score * 0.15);
+        const progress = clamp(state.elapsedTime / GAME_CONFIG.snack.rampDuration, 0, 1);
+        const baseGravity = lerp(GAME_CONFIG.snack.initialGravity, GAME_CONFIG.snack.maxGravity, progress);
+        const velocityY = (baseGravity + Math.random() * 140) * (0.7 + type.score * 0.15);
         state.snacks.push({
             type,
             x,
