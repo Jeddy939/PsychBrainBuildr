@@ -331,6 +331,28 @@ document.addEventListener('DOMContentLoaded', () => {
         bestLabel.textContent = `Best: ${state.best}`;
     }
 
+    function awardPsychbucks() {
+        const reward = Math.max(0, Math.floor(state.score));
+        if (reward <= 0) {
+            return;
+        }
+        const api = window.GameAPI;
+        if (!api || typeof api.getGameState !== 'function') {
+            return;
+        }
+        const globalState = api.getGameState();
+        if (!globalState || typeof globalState.psychbucks !== 'number') {
+            return;
+        }
+        globalState.psychbucks += reward;
+        if (typeof api.updateDisplays === 'function') {
+            api.updateDisplays();
+        }
+        if (typeof api.logMessage === 'function') {
+            api.logMessage(`Flappy Freud: Navigated ${state.score} obstacles. +${reward} Psychbucks`, 'log-info');
+        }
+    }
+
     function flap() {
         state.freud.velocity = physics.flapVelocity;
     }
@@ -470,6 +492,8 @@ document.addEventListener('DOMContentLoaded', () => {
     function triggerGameOver() {
         if (!state.isRunning) return;
         state.isRunning = false;
+        updateScoreboard();
+        awardPsychbucks();
         messageLabel.textContent = 'Analysis complete. Press enter or tap to retry.';
         if (startButton) {
             startButton.textContent = 'Try Again';
