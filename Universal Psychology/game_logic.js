@@ -28,7 +28,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         // isAmygdalaActive is effectively AnxietySystem.isAmygdalaFunctioning()
         unlockedGames: {
             neurosnake: false,
-            brainTetris: true,
+            brainTetris: false,
             flappyFreud: false,
             feedSundgren: false
         }
@@ -198,6 +198,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     let intermittentFastingIntervalId = null;
     let irregularSnacksTimeoutId = null;
 
+    const MINIGAME_UNLOCK_SEQUENCE = ['brainTetris', 'neurosnake', 'flappyFreud', 'feedSundgren'];
+    const MINIGAME_DISPLAY_NAMES = {
+        brainTetris: 'Brain Tetris',
+        neurosnake: 'NeuroSnake',
+        flappyFreud: 'Flappy Freud',
+        feedSundgren: 'Feed Sundgren'
+    };
+
+    function unlockMinigamesForBrainLevel(level) {
+        const unlockCount = Math.max(0, Math.min(MINIGAME_UNLOCK_SEQUENCE.length, level - 1));
+        const newlyUnlocked = [];
+        for (let i = 0; i < unlockCount; i++) {
+            const key = MINIGAME_UNLOCK_SEQUENCE[i];
+            if (!gameState.unlockedGames[key]) {
+                gameState.unlockedGames[key] = true;
+                newlyUnlocked.push(key);
+            }
+        }
+        if (newlyUnlocked.length > 0) {
+            newlyUnlocked.forEach(key => UIManager.logMessage(`Minigame unlocked: ${MINIGAME_DISPLAY_NAMES[key] || key}`, 'log-unlock'));
+            UIManager.updateMinigameButtons();
+        }
+    }
+
+    function unlockRemainingMinigames(reasonMessage) {
+        const newlyUnlocked = MINIGAME_UNLOCK_SEQUENCE.filter(key => !gameState.unlockedGames[key]);
+        if (newlyUnlocked.length === 0) return;
+        newlyUnlocked.forEach(key => {
+            gameState.unlockedGames[key] = true;
+        });
+        if (reasonMessage) {
+            UIManager.logMessage(reasonMessage, 'log-unlock');
+        }
+        newlyUnlocked.forEach(key => UIManager.logMessage(`Minigame unlocked: ${MINIGAME_DISPLAY_NAMES[key] || key}`, 'log-unlock'));
+        UIManager.updateMinigameButtons();
+    }
+
     // --- Upgrade Action Functions ---
     function biggerBrain1Action() {
         UIManager.logMessage("biggerBrain1 ACTION TRIGGERED!", "log-info");
@@ -225,6 +262,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         LanguageManager.apply(gameState.currentBrainLevel);
         QuestionSystem.unlockDifficultyLevel(1);
         if (hypothalamusControlsAreaDOM) hypothalamusControlsAreaDOM.style.display = 'block';
+        unlockMinigamesForBrainLevel(gameState.currentBrainLevel);
         UIManager.logMessage("Brain Growth II: Medium Qs & Hypothalamus unlocked.", "log-unlock");
     }
 
@@ -235,6 +273,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         LanguageManager.apply(gameState.currentBrainLevel);
         QuestionSystem.unlockDifficultyLevel(2);
         startIrregularSnacks();
+        unlockMinigamesForBrainLevel(gameState.currentBrainLevel);
         UIManager.logMessage("Brain Growth III: Hard Qs & Amygdala research.", "log-unlock");
         UpgradeSystem.renderCoreUpgrades();
     }
@@ -247,12 +286,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     function nucleusAccumbensAction() {
-        gameState.unlockedGames.neurosnake = true;
-        gameState.unlockedGames.brainTetris = true;
-        gameState.unlockedGames.flappyFreud = true;
-        gameState.unlockedGames.feedSundgren = true;
-        UIManager.updateMinigameButtons();
-        UIManager.logMessage("Pleasure center engaged! Minigames available.", 'log-unlock');
+        unlockRemainingMinigames("Pleasure center engaged! Minigames available.");
     }
 
     function prolifFactoryAction() {
@@ -776,12 +810,10 @@ document.addEventListener('DOMContentLoaded', async () => {
             } else if(upg.id === 'amygdalaActivation') {
                 if(!AnxietySystem.isAmygdalaFunctioning()) AnxietySystem.activateAmygdala();
             } else if(upg.id === 'nucleusAccumbens') {
-                gameState.unlockedGames.neurosnake = true;
-                gameState.unlockedGames.brainTetris = true;
-                gameState.unlockedGames.flappyFreud = true;
-                gameState.unlockedGames.feedSundgren = true;
+                unlockRemainingMinigames();
             }
         });
+        unlockMinigamesForBrainLevel(gameState.currentBrainLevel);
         UpgradeSystem.neuronProliferationUpgrades.forEach(upg => {
             if(!upg.effectApplied) return;
             if(upg.id === 'prolifFactory') {
